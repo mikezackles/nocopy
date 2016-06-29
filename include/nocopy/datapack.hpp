@@ -33,7 +33,7 @@ namespace nocopy {
 
   namespace detail {
     template <typename ...Ts>
-    struct set {
+    struct type_set {
       static constexpr auto value = hana::make_set(hana::type_c<Ts>...);
     };
 
@@ -57,34 +57,38 @@ namespace nocopy {
     };
 
     template <typename T, typename FieldType, typename = hana::when<true>>
-    struct multi {};
+    struct find_return_type {};
     template <typename T>
-    struct multi<T, single_field, hana::when<true>> {
+    struct find_return_type<T, single_field, hana::when<true>> {
       using type = T;
     };
     template <typename T, std::size_t Count>
-    struct multi<T, multi_field<Count>, hana::when<hana::contains(set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>> {
+    struct find_return_type<T, multi_field<Count>
+    , hana::when<hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>
+    > {
       using type = std::array<T, Count>;
     };
     template <typename T, std::size_t Count>
-    struct multi<T, multi_field<Count>, hana::when<!hana::contains(set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>> {
+    struct find_return_type<T, multi_field<Count>
+    , hana::when<!hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>
+    > {
       using type = arraypack<T, Count>;
     };
     template <typename T, typename FieldType>
-    using multi_t = typename multi<T, FieldType>::type;
+    using find_return_type_t = typename find_return_type<T, FieldType>::type;
   }
 
   template <typename T, typename FieldType = single_field>
   struct field {
     static_assert(sizeof(T) <= 32, "no scalar types with size greater than 32 for now");
     static constexpr auto allowed_types =
-      detail::set<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float>::value;
+      detail::type_set<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float>::value;
     static_assert(hana::contains(allowed_types, hana::type_c<T>), "unsupported field type");
     static_assert(
       !std::is_floating_point<T>::value || std::numeric_limits<float>::is_iec559
     , "must use IEC 559 floating point"
     );
-    using return_type = detail::multi_t<T, FieldType>;
+    using return_type = detail::find_return_type_t<T, FieldType>;
     static constexpr auto name = "unnamed";
     static constexpr std::size_t alignment = sizeof(T);
     static constexpr std::size_t size = sizeof(return_type);
