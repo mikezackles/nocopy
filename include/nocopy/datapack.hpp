@@ -217,7 +217,6 @@ namespace nocopy {
     }
 
   private:
-    static_assert(sizeof(uint32_t) < alignof(std::max_align_t), "maximum alignment must be greater than sizeof(uint32_t)");
     std::array<align_type, packed_size / max_alignment> buffer_;
   };
 }
