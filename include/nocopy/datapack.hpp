@@ -31,10 +31,33 @@ namespace nocopy {
   template <typename T, std::size_t Size>
   class arraypack;
 
+  template <typename ...Ts>
+  class datapack;
+
   namespace detail {
     template <typename ...Ts>
     struct type_set {
       static constexpr auto value = hana::make_set(hana::type_c<Ts>...);
+    };
+
+    template <typename T>
+    struct is_datapack {
+      static constexpr bool value = false;
+    };
+
+    template <typename ...Ts>
+    struct is_datapack<datapack<Ts...>> {
+      static constexpr bool value = true;
+    };
+
+    template <typename T>
+    struct is_arraypack {
+      static constexpr bool value = false;
+    };
+
+    template <typename T, std::size_t Size>
+    struct is_arraypack<arraypack<T, Size>> {
+      static constexpr bool value = true;
     };
 
     template <typename T, typename = hana::when<true>>
@@ -80,10 +103,12 @@ namespace nocopy {
 
   template <typename T, typename FieldType = single_field>
   struct field {
-    static_assert(sizeof(T) <= 32, "no scalar types with size greater than 32 for now");
     static constexpr auto allowed_types =
       detail::type_set<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float>::value;
-    static_assert(hana::contains(allowed_types, hana::type_c<T>), "unsupported field type");
+    static_assert(
+      detail::is_datapack<T>::value || detail::is_arraypack<T>::value || hana::contains(allowed_types, hana::type_c<T>)
+    , "unsupported field type"
+    );
     static_assert(
       !std::is_floating_point<T>::value || std::numeric_limits<float>::is_iec559
     , "must use IEC 559 floating point"
@@ -146,11 +171,21 @@ namespace nocopy {
       return lookup[hana::type_c<T>];
     }
 
+    static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment;
+
+    static constexpr auto align_to(std::uintptr_t offset, std::size_t alignment) {
+      return offset + (((~offset) + 1) & (alignment - 1));
+    }
+
+    using align_type = typename std::aligned_storage<max_alignment, max_alignment>::type;
+    static_assert(sizeof(align_type) == max_alignment, "type used for alignment must be exactly the max alignment in size");
+
   public:
-    static constexpr auto packed_size = hana::back(offsets);
+    static constexpr auto packed_size = align_to(hana::back(offsets), max_alignment);
+    static_assert(packed_size % max_alignment == 0, "");
 
     datapack() {
-      assert(reinterpret_cast<std::uintptr_t>(this) % sizeof(uint32_t) == 0);
+      assert(reinterpret_cast<std::uintptr_t>(this) % max_alignment == 0);
     }
 
     template <typename Field>
@@ -183,7 +218,7 @@ namespace nocopy {
 
   private:
     static_assert(sizeof(uint32_t) < alignof(std::max_align_t), "maximum alignment must be greater than sizeof(uint32_t)");
-    std::aligned_storage<packed_size, sizeof(uint32_t)> buffer_;
+    std::array<align_type, packed_size / max_alignment> buffer_;
   };
 }
 
