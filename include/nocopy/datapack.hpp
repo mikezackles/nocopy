@@ -37,16 +37,12 @@ namespace nocopy {
       static constexpr auto value = hana::make_set(hana::type_c<Ts>...);
     };
 
-    template <typename T>
-    struct is_scalar_or_floating_point
-      : std::integral_constant<bool, std::is_scalar<T>::value || std::is_floating_point<T>::value> {};
-
     template <typename T, typename = hana::when<true>>
     struct field_getter {
       static T& get(T& val) { return val; }
     };
     template <typename T>
-    struct field_getter<T, hana::when<is_scalar_or_floating_point<T>::value>> {
+    struct field_getter<T, hana::when<std::is_scalar<T>::value>> {
       static auto get(T val) { return byte_swap_if_big_endian(val); }
     };
 
@@ -56,7 +52,7 @@ namespace nocopy {
       static_assert(fail<T>::value, "cannot set aggregate field");
     };
     template <typename T>
-    struct field_setter<T, hana::when<is_scalar_or_floating_point<T>::value>> {
+    struct field_setter<T, hana::when<std::is_scalar<T>::value>> {
       static auto set(T& target, T val) { target = byte_swap_if_big_endian(val); }
     };
 
