@@ -160,7 +160,7 @@ namespace nocopy {
 
     template <typename Field>
     decltype(auto) get() const {
-      return detail::field_getter<typename Field::return_type>::get(
+      return detail::field_getter<typename Field::return_type const>::get(
         *reinterpret_cast<typename Field::return_type const*>(
           reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
         )

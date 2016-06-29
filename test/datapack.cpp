@@ -50,7 +50,7 @@ SCENARIO("datapack") {
 
       THEN("calling get on an array field returns a const std::array reference") {
         REQUIRE(static_cast<bool>(
-          hana::type_c<decltype(measured.get<coords>())> == hana::type_c<std::array<uint8_t, 10> const&>
+          hana::type_c<decltype(cmeasured.get<coords>())> == hana::type_c<std::array<uint8_t, 10> const&>
         ));
       }
     }
