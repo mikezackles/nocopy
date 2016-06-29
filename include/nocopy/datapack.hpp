@@ -99,11 +99,9 @@ namespace nocopy {
     std::array<T, Size> buffer_;
   };
 
-  template <uint32_t Version, typename ...Fields>
+  template <typename ...Fields>
   class datapack {
     static constexpr auto types = hana::make_tuple(hana::type_c<Fields>...);
-
-    static constexpr std::uintptr_t version_offset = sizeof(uint32_t);
 
     struct alignment_is_larger {
       template <typename X, typename Y>
@@ -121,7 +119,7 @@ namespace nocopy {
       }
     };
     static constexpr auto offsets = hana::fold_left(
-      fields_by_alignment, hana::make_tuple(version_offset), offset_fold_impl{}
+      fields_by_alignment, hana::make_tuple(std::uintptr_t{0}), offset_fold_impl{}
     );
 
     static constexpr auto field_offset_pairs = hana::zip_shortest(fields_by_alignment, offsets);
