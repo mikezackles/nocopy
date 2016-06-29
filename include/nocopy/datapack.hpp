@@ -3,6 +3,7 @@
 
 #include <nocopy/endianness.hpp>
 
+#include <cassert>
 #include <climits>
 #include <boost/hana/at_key.hpp>
 #include <boost/hana/back.hpp>
@@ -11,34 +12,15 @@
 #include <boost/hana/sort.hpp>
 #include <boost/hana/zip_shortest.hpp>
 #include <iostream>
-#include <optional.hpp>
 
 namespace nocopy {
   static_assert(CHAR_BIT == 8, "char must have 8 bits");
 
   namespace hana = boost::hana;
-  template <typename T>
-  using optional = std::experimental::optional<T>;
 
   namespace detail {
-    //template <typename T>
-    //struct raw_type {
-    //  using type = T;
-    //};
-
-    //template <typename T, std::size_t Size>
-    //struct raw_type<std::array<T, Size>> {
-    //  // AFAIK std::array is already guaranteed to be POD, but we do a few
-    //  // checks just to be sure
-    //  static_assert(std::is_pod_v<std::array<T, Size>>, "std::array must be POD");
-    //  static_assert(sizeof(std::array<T, Size>) == Size, "std::array must be POD");
-    //  using type = T;
-    //};
-    //template <typename T>
-    //using raw_type_t = typename raw_type<T>::type;
-
     template <typename ...Ts>
-    struct set {
+    struct field_set {
       static constexpr auto value = hana::make_set(hana::type_c<Ts>...);
     };
   }
@@ -46,7 +28,7 @@ namespace nocopy {
   template <typename T>
   struct field {
     static constexpr auto allowed_types =
-      detail::set<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float>::value;
+      detail::field_set<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float>::value;
     static_assert(sizeof(T) <= 32, "no scalar types with size greater than 32 for now");
     static_assert(hana::contains(allowed_types, hana::type_c<T>), "unsupported field type");
     static_assert(
@@ -63,7 +45,7 @@ namespace nocopy {
   class datapack {
     static constexpr auto types = hana::make_tuple(hana::type_c<Fields>...);
 
-    static constexpr auto version_offset = sizeof(uint32_t);
+    static constexpr std::uintptr_t version_offset = sizeof(uint32_t);
 
     struct alignment_is_larger {
       template <typename X, typename Y>
@@ -107,39 +89,29 @@ namespace nocopy {
   public:
     static constexpr auto packed_size = hana::back(offsets);
 
-    static optional<datapack> create(void* bufferp, std::size_t size) {
-      // TODO - accept std::error_code as out arg
-      if (reinterpret_cast<std::uintptr_t>(bufferp) % sizeof(uint32_t) != 0) {
-        std::cerr << "cannot create datapack from unaligned buffer" << std::endl;
-        return {};
-      } else if (size < packed_size) {
-        std::cerr << "buffer is too small to hold datapack" << std::endl;
-        return {};
-      }
-      return datapack{bufferp};
+    datapack() {
+      assert(reinterpret_cast<std::uintptr_t>(this) % sizeof(uint32_t) == 0);
     }
 
     template <typename Field>
     typename Field::type get() const {
       return byte_swap_if_big_endian(
-        *reinterpret_cast<typename Field::type*>(&bufferp_[get_offset<Field>()])
+        *reinterpret_cast<typename Field::type*>(reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>())
       );
     }
 
     template <typename Field>
     void set(typename Field::type val) {
-      *reinterpret_cast<typename Field::type*>(bufferp_ + get_offset<Field>()) = byte_swap_if_big_endian(val);
+      *reinterpret_cast<typename Field::type*>(reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()) = byte_swap_if_big_endian(val);
     }
+
   private:
-    datapack(void* bufferp) : bufferp_(reinterpret_cast<uint8_t*>(bufferp)) {
-      *reinterpret_cast<uint32_t*>(bufferp_) = Version;
-    }
-    uint8_t* bufferp_;
+    std::aligned_storage<packed_size, sizeof(uint32_t)> buffer_;
   };
 }
 
 #ifndef NOCOPY_NO_MACROS
-  #define NOCOPY_FIELD(field_name, type)              \
+  #define NOCOPY_FIELD(field_name, type) \
     struct field_name : ::nocopy::field<type> { \
       static constexpr auto name = #field_name; \
     }
