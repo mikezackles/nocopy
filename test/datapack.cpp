@@ -42,6 +42,12 @@ SCENARIO("datapack") {
       REQUIRE(measured.get<locations>().get(12) == 42);
     }
 
+    THEN("calling get on a scalar field returns by value") {
+      REQUIRE(static_cast<bool>(
+        hana::type_c<decltype(measured.get<first>())> == hana::type_c<uint32_t>
+      ));
+    }
+
     THEN("calling get on an array field returns a std::array reference") {
       REQUIRE(static_cast<bool>(
         hana::type_c<decltype(measured.get<coords>())> == hana::type_c<std::array<uint8_t, 10>&>
