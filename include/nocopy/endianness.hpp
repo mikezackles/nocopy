@@ -18,6 +18,8 @@
 #ifndef UUID_615B4CAC_4B0F_4579_8179_93BE023928EE
 #define UUID_615B4CAC_4B0F_4579_8179_93BE023928EE
 
+#include <cassert>
+
 // The wire format uses a little endian encoding (since that's efficient for
 // the common platforms).
 #if !defined(NOCOPY_LITTLEENDIAN)
