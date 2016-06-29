@@ -45,12 +45,44 @@ SCENARIO("datapack") {
       ));
     }
 
+    THEN("calling get on an array field returns a std::array reference") {
+      REQUIRE(static_cast<bool>(
+        hana::type_c<decltype(measured.get<coords>())> == hana::type_c<std::array<uint8_t, 10>&>
+      ));
+    }
+
+    THEN("calling get on an arraypack field returns an arraypack reference") {
+      REQUIRE(static_cast<bool>(
+        hana::type_c<decltype(measured.get<locations>())> == hana::type_c<nocopy::arraypack<uint32_t, 20>&>
+      ));
+    }
+
     GIVEN("a const reference") {
       auto const& cmeasured = measured;
+
+      THEN("it can be unpacked") {
+        REQUIRE(cmeasured.get<delta>() == Approx(0.5));
+        REQUIRE(cmeasured.get<first>() == 1001);
+        REQUIRE(cmeasured.get<second>() == 4);
+        REQUIRE(cmeasured.get<coords>()[4] == 5);
+        REQUIRE(cmeasured.get<locations>().get(12) == 42);
+      }
+
+      THEN("const doesn't leak to by-value types") {
+        REQUIRE(static_cast<bool>(
+          hana::type_c<decltype(cmeasured.get<delta>())> == hana::type_c<float>
+        ));
+      }
 
       THEN("calling get on an array field returns a const std::array reference") {
         REQUIRE(static_cast<bool>(
           hana::type_c<decltype(cmeasured.get<coords>())> == hana::type_c<std::array<uint8_t, 10> const&>
+        ));
+      }
+
+      THEN("calling get on an arraypack field returns a const arraypack reference") {
+        REQUIRE(static_cast<bool>(
+          hana::type_c<decltype(cmeasured.get<locations>())> == hana::type_c<nocopy::arraypack<uint32_t, 20> const&>
         ));
       }
     }
