@@ -12,18 +12,21 @@ namespace nocopy {
   public:
     decltype(auto) get(std::size_t index) {
       assert(reinterpret_cast<std::uintptr_t>(this) % detail::find_alignment<T>::result == 0);
+      assert(index < Size);
 
       return detail::field_getter<T>::get(buffer_[index]);
     }
 
     decltype(auto) get(std::size_t index) const {
       assert(reinterpret_cast<std::uintptr_t>(this) % detail::find_alignment<T>::result == 0);
+      assert(index < Size);
 
       return detail::field_getter<T const>::get(buffer_[index]);
     }
 
     void set(std::size_t index, T val) {
       assert(reinterpret_cast<std::uintptr_t>(this) % detail::find_alignment<T>::result == 0);
+      assert(index < Size);
 
       return detail::field_setter<T>::set(buffer_[index], val);
     }
