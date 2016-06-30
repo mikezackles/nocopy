@@ -105,7 +105,7 @@ SCENARIO("datapack") {
       ));
     }
 
-    GIVEN("a const reference") {
+    WHEN("a const reference is taken") {
       auto const& cmeasured = measured;
 
       THEN("it can be unpacked") {
@@ -133,6 +133,20 @@ SCENARIO("datapack") {
           hana::type_c<decltype(cmeasured.get<locations>())> == hana::type_c<nocopy::arraypack<uint32_t, 20> const&>
         ));
       }
+    }
+  }
+
+  GIVEN("a datapack with nested datapacks") {
+    namespace e = experiment_fields;
+    namespace m = measurement_fields;
+    experiment exp{};
+
+    exp.get<e::measure1>().set<m::second>(5);
+    exp.get<e::more_measurements>().get(5).set<m::second>(12);
+
+    THEN("it can be unpacked") {
+      REQUIRE(exp.get<e::measure1>().get<m::second>() == 5);
+      REQUIRE(exp.get<e::more_measurements>().get(5).get<m::second>() == 12);
     }
   }
 }
