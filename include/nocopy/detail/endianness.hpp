@@ -40,7 +40,7 @@
   #endif
 #endif // !defined(NOCOPY_LITTLEENDIAN)
 
-namespace nocopy {
+namespace nocopy { namespace detail {
   template<typename Scalar>
   inline Scalar byte_swap_if_big_endian(Scalar scalar) {
     static_assert(std::is_scalar<Scalar>::value, "endianness conversion can only be performed on scalar types");
@@ -78,6 +78,6 @@ namespace nocopy {
       #endif
     #endif
   }
-}
+}}
 
 #endif

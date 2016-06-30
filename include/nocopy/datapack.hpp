@@ -1,7 +1,7 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
-#include "endianness.hpp"
+#include "detail/endianness.hpp"
 #include "static_asserts.hpp"
 
 #include <cassert>
@@ -22,7 +22,7 @@ namespace nocopy {
     };
     template <typename T>
     struct field_getter<T, hana::when<std::is_scalar<T>::value>> {
-      static auto get(T val) { return byte_swap_if_big_endian(val); }
+      static auto get(T val) { return detail::byte_swap_if_big_endian(val); }
     };
 
     template <typename T> struct fail { static constexpr bool value = false; };
@@ -32,7 +32,7 @@ namespace nocopy {
     };
     template <typename T>
     struct field_setter<T, hana::when<std::is_scalar<T>::value>> {
-      static auto set(T& target, T val) { target = byte_swap_if_big_endian(val); }
+      static auto set(T& target, T val) { target = detail::byte_swap_if_big_endian(val); }
     };
   }
 
