@@ -1,6 +1,8 @@
 #ifndef UUID_E7D186DD_98F4_410C_A45A_9C39E7680281
 #define UUID_E7D186DD_98F4_410C_A45A_9C39E7680281
 
+#include "endianness.hpp"
+
 namespace nocopy {
   template <typename T, std::size_t Size>
   class arraypack {
