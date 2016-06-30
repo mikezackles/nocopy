@@ -142,11 +142,11 @@ SCENARIO("datapack") {
     experiment exp{};
 
     exp.get<e::measure1>().set<m::second>(5);
-    exp.get<e::more_measurements>().get(5).set<m::second>(12);
+    exp.get<e::more_measurements>().get(4).set<m::second>(12);
 
     THEN("it can be unpacked") {
       REQUIRE(exp.get<e::measure1>().get<m::second>() == 5);
-      REQUIRE(exp.get<e::more_measurements>().get(5).get<m::second>() == 12);
+      REQUIRE(exp.get<e::more_measurements>().get(4).get<m::second>() == 12);
     }
   }
 }
