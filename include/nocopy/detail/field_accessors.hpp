@@ -3,7 +3,14 @@
 
 #include "endianness.hpp"
 
+#include "ignore_warnings_from_dependencies.hpp"
+BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <boost/hana/core/when.hpp>
+END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+
 namespace nocopy { namespace detail {
+  namespace hana = boost::hana;
+
   template <typename T, typename = hana::when<true>>
   struct field_getter {
     static T& get(T& val) { return val; }
