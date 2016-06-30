@@ -10,6 +10,8 @@ namespace nocopy {
   template <typename T, std::size_t Size>
   class arraypack {
   public:
+    using size_type = std::size_t;
+
     decltype(auto) get(std::size_t index) {
       assert(reinterpret_cast<std::uintptr_t>(this) % detail::find_alignment<T>::result == 0);
       assert(index < Size);
@@ -30,6 +32,8 @@ namespace nocopy {
 
       return detail::field_setter<T>::set(buffer_[index], val);
     }
+
+    size_type size() { return buffer_.size(); }
 
   private:
     std::array<T, Size> buffer_;
