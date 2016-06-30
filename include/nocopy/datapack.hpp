@@ -78,6 +78,7 @@ namespace nocopy {
 
     template <typename Field>
     decltype(auto) get() {
+      assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
       return detail::field_getter<typename Field::return_type>::get(
         *reinterpret_cast<typename Field::return_type*>(
           reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
@@ -87,6 +88,7 @@ namespace nocopy {
 
     template <typename Field>
     decltype(auto) get() const {
+      assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
       return detail::field_getter<typename Field::return_type const>::get(
         *reinterpret_cast<typename Field::return_type const*>(
           reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
@@ -96,6 +98,7 @@ namespace nocopy {
 
     template <typename Field>
     void set(typename Field::return_type val) {
+      assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
       detail::field_setter<typename Field::return_type>::set(
         *reinterpret_cast<typename Field::return_type*>(
           reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
