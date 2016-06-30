@@ -4,9 +4,12 @@
 #include "arraypack.hpp"
 #include "static_asserts.hpp"
 
+#include "detail/ignore_warnings_from_dependencies.hpp"
+BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 #include <boost/hana/core/when.hpp>
+END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
 namespace nocopy {
   namespace hana = boost::hana;
@@ -88,7 +91,7 @@ namespace nocopy {
     );
     static_assert(
       !std::is_floating_point<T>::value || std::numeric_limits<float>::is_iec559
-    , "must use IEC 559 floating point"
+    , "must use IEC 559 to enable floating point support"
     );
     using return_type = detail::find_return_type_t<T, FieldType>;
     static constexpr auto name = "unnamed";
@@ -100,7 +103,7 @@ namespace nocopy {
 #ifndef NOCOPY_NO_MACROS
 #define NOCOPY_FIELD(field_name, type) \
   struct field_name : ::nocopy::field<type> { \
-    static constexpr auto name = #field_name;   \
+    static constexpr auto name = #field_name; \
   }
 
 #define NOCOPY_ARRAY(field_name, type, size) \

@@ -32,12 +32,14 @@ target_include_directories(tests
   PRIVATE
   "${CMAKE_SOURCE_DIR}/bundle/catch/include")
 
-#target_all_warnings_except(tests
-#  CLANG
-#  # clang warnings
-#  GCC
-#  # gcc warnings
-#  )
+target_all_warnings_except(tests
+  CLANG
+  # clang warnings
+  -Wno-c++98-compat
+  -Wno-c++98-compat-pedantic
+  GCC
+  # gcc warnings
+  )
 
 target_link_libraries(tests nocopy)
 

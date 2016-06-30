@@ -6,11 +6,15 @@
 
 #include <cassert>
 #include <climits>
+
+#include "detail/ignore_warnings_from_dependencies.hpp"
+BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/at_key.hpp>
 #include <boost/hana/back.hpp>
 #include <boost/hana/map.hpp>
 #include <boost/hana/sort.hpp>
 #include <boost/hana/zip_shortest.hpp>
+END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
 namespace nocopy {
   namespace hana = boost::hana;
