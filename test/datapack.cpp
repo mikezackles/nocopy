@@ -1,6 +1,6 @@
 #include <catch.hpp>
 
-#include <nocopy/datapack.hpp>
+#include <nocopy.hpp>
 
 namespace hana = boost::hana;
 

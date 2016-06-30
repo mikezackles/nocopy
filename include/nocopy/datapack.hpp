@@ -125,16 +125,4 @@ namespace nocopy {
   };
 }
 
-#ifndef NOCOPY_NO_MACROS
-  #define NOCOPY_FIELD(field_name, type) \
-    struct field_name : ::nocopy::field<type> { \
-      static constexpr auto name = #field_name; \
-    }
-
-  #define NOCOPY_ARRAY(field_name, type, size) \
-    struct field_name : ::nocopy::field<type, ::nocopy::multi_field<size>> { \
-      static constexpr auto name = #field_name; \
-    }
-#endif
-
 #endif
