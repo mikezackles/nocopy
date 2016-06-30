@@ -22,6 +22,36 @@ namespace nocopy_experiment {
 }
 
 SCENARIO("datapack") {
+  GIVEN("a datapack-sized buffer of garbage data") {
+    using namespace nocopy_measurement;
+    std::array<uint8_t, sizeof(measurement)> buffer;
+    std::fill_n(buffer.begin(), buffer.size(), 1);
+
+    WHEN("a default-initialized datapack is constructed from the buffer") {
+      auto measurep = new (&buffer) measurement;
+
+      THEN("the data is still garbage") {
+        REQUIRE(measurep->get<second>() != 0);
+      }
+    }
+
+    WHEN("a zero-initialized datapack is constructed from the buffer") {
+      auto measurep = new (&buffer) measurement();
+
+      THEN("the data is zeroed") {
+        REQUIRE(measurep->get<second>() == 0);
+      }
+    }
+
+    WHEN("a value-initialized datapack is constructed from the buffer") {
+      auto measurep = new (&buffer) measurement{};
+
+      THEN("the data is zeroed") {
+        REQUIRE(measurep->get<second>() == 0);
+      }
+    }
+  }
+
   GIVEN("an initialized datapack") {
     using namespace nocopy_measurement;
     measurement measured{};

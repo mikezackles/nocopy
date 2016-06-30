@@ -184,10 +184,6 @@ namespace nocopy {
     static constexpr auto packed_size = align_to(hana::back(offsets), max_alignment);
     static_assert(packed_size % max_alignment == 0, "");
 
-    datapack() {
-      assert(reinterpret_cast<std::uintptr_t>(this) % max_alignment == 0);
-    }
-
     template <typename Field>
     decltype(auto) get() {
       return detail::field_getter<typename Field::return_type>::get(
