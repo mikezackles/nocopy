@@ -79,35 +79,50 @@ namespace nocopy {
     template <typename Field>
     decltype(auto) get() {
       assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
-      return detail::field_getter<typename Field::return_type>::get(
-        *reinterpret_cast<typename Field::return_type*>(
-          reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
-        )
+
+      using return_type = typename Field::return_type;
+      return detail::field_getter<return_type>::get(
+        get_reference<Field>()
       );
     }
 
     template <typename Field>
     decltype(auto) get() const {
       assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
-      return detail::field_getter<typename Field::return_type const>::get(
-        *reinterpret_cast<typename Field::return_type const*>(
-          reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
-        )
+
+      using return_type = typename Field::return_type;
+      return detail::field_getter<return_type const>::get(
+        get_reference<Field>()
       );
     }
 
     template <typename Field>
     void set(typename Field::return_type val) {
       assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
-      detail::field_setter<typename Field::return_type>::set(
-        *reinterpret_cast<typename Field::return_type*>(
-          reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
-        )
+
+      using return_type = typename Field::return_type;
+      detail::field_setter<return_type>::set(
+        get_reference<Field>()
       , val
       );
     }
 
   private:
+    template <typename Field>
+    auto const& get_reference() const {
+      return *reinterpret_cast<typename Field::return_type*>(
+        reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
+      );
+    }
+
+    template <typename Field>
+    auto& get_reference() {
+      // it was less ugly to duplicate than to try to call the const-version here
+      return *reinterpret_cast<typename Field::return_type*>(
+        reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
+      );
+    }
+
     std::array<align_type, packed_size / alignment> buffer_;
   };
 }
