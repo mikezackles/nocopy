@@ -67,6 +67,15 @@ namespace nocopy {
     };
     template <typename T, typename FieldType>
     using find_return_type_t = typename find_return_type<T, FieldType>::type;
+
+    template <typename T, typename = hana::when<true>>
+    struct find_alignment {
+      static constexpr std::size_t result = sizeof(T);
+    };
+    template <typename T>
+    struct find_alignment<T, hana::when<is_datapack<T>::value>> {
+      static constexpr std::size_t result = T::alignment;
+    };
   }
 
   template <typename T, typename FieldType = single_field>
@@ -83,7 +92,7 @@ namespace nocopy {
     );
     using return_type = detail::find_return_type_t<T, FieldType>;
     static constexpr auto name = "unnamed";
-    static constexpr std::size_t alignment = sizeof(T);
+    static constexpr std::size_t alignment = detail::find_alignment<T>::result;
     static constexpr std::size_t size = sizeof(return_type);
   };
 }

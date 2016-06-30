@@ -89,8 +89,9 @@ namespace nocopy {
     static_assert(sizeof(align_type) == max_alignment, "type used for alignment must be exactly the max alignment in size");
 
   public:
-    static constexpr auto packed_size = align_to(hana::back(offsets), max_alignment);
-    static_assert(packed_size % max_alignment == 0, "");
+    static constexpr auto alignment = max_alignment;
+    static constexpr auto packed_size = align_to(hana::back(offsets), alignment);
+    static_assert(packed_size % alignment == 0, "");
 
     template <typename Field>
     decltype(auto) get() {
@@ -121,7 +122,7 @@ namespace nocopy {
     }
 
   private:
-    std::array<align_type, packed_size / max_alignment> buffer_;
+    std::array<align_type, packed_size / alignment> buffer_;
   };
 }
 
