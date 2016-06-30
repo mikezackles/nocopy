@@ -2,6 +2,7 @@
 #define UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 
 #include "arraypack.hpp"
+#include "detail/traits.hpp"
 #include "static_asserts.hpp"
 
 #include "detail/ignore_warnings_from_dependencies.hpp"
@@ -19,67 +20,6 @@ namespace nocopy {
   struct multi_field {
     static_assert(Count > 0, "multi field must have count greater than 0");
   };
-
-  template <typename ...Ts>
-  class datapack;
-
-  namespace detail {
-    template <typename ...Ts>
-    struct type_set {
-      static constexpr auto value = hana::make_set(hana::type_c<Ts>...);
-    };
-
-    template <typename T>
-    struct is_datapack {
-      static constexpr bool value = false;
-    };
-
-    template <typename ...Ts>
-    struct is_datapack<datapack<Ts...>> {
-      static constexpr bool value = true;
-    };
-
-    template <typename T>
-    struct is_arraypack {
-      static constexpr bool value = false;
-    };
-
-    template <typename T, std::size_t Size>
-    struct is_arraypack<arraypack<T, Size>> {
-      static constexpr bool value = true;
-    };
-
-    template <typename T>
-    constexpr auto may_byte_swap() {
-      return !hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>);
-    }
-
-    template <typename T, typename FieldType, typename = hana::when<true>>
-    struct find_return_type {};
-    template <typename T>
-    struct find_return_type<T, single_field, hana::when<true>> {
-      using type = T;
-    };
-    template <typename T, std::size_t Count>
-    struct find_return_type<T, multi_field<Count>, hana::when<!may_byte_swap<T>()>> {
-      using type = std::array<T, Count>;
-    };
-    template <typename T, std::size_t Count>
-    struct find_return_type<T, multi_field<Count>, hana::when<may_byte_swap<T>()>> {
-      using type = arraypack<T, Count>;
-    };
-    template <typename T, typename FieldType>
-    using find_return_type_t = typename find_return_type<T, FieldType>::type;
-
-    template <typename T, typename = hana::when<true>>
-    struct find_alignment {
-      static constexpr std::size_t result = sizeof(T);
-    };
-    template <typename T>
-    struct find_alignment<T, hana::when<is_datapack<T>::value>> {
-      static constexpr std::size_t result = T::alignment;
-    };
-  }
 
   template <typename T, typename FieldType = single_field>
   struct field {
