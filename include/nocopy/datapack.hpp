@@ -1,8 +1,8 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
-#include "arraypack.hpp"
 #include "endianness.hpp"
+#include "static_asserts.hpp"
 
 #include <cassert>
 #include <climits>
@@ -13,12 +13,6 @@
 #include <boost/hana/zip_shortest.hpp>
 
 namespace nocopy {
-  static_assert(CHAR_BIT == 8, "char must have 8 bits");
-  // AFAIK the standard guarantees that std::array is POD, but we do our
-  // best to make sure.
-  static_assert(std::is_pod<std::array<int, 42>>::value, "std::array must be POD");
-  static_assert(sizeof(std::array<int, 42>) == sizeof(int) * 42, "std::array must be POD");
-
   namespace hana = boost::hana;
 
   namespace detail {

@@ -1,6 +1,9 @@
 #ifndef UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 #define UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 
+#include "arraypack.hpp"
+#include "static_asserts.hpp"
+
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 #include <boost/hana/core/when.hpp>
