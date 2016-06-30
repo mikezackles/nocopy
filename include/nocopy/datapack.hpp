@@ -1,7 +1,8 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
-#include <nocopy/endianness.hpp>
+#include "endianness.hpp"
+#include "arraypack.hpp"
 
 #include <cassert>
 #include <climits>
@@ -27,9 +28,6 @@ namespace nocopy {
   struct multi_field {
     static_assert(Count > 0, "multi field must have count greater than 0");
   };
-
-  template <typename T, std::size_t Size>
-  class arraypack;
 
   template <typename ...Ts>
   class datapack;
@@ -117,15 +115,6 @@ namespace nocopy {
     static constexpr auto name = "unnamed";
     static constexpr std::size_t alignment = sizeof(T);
     static constexpr std::size_t size = sizeof(return_type);
-  };
-
-  template <typename T, std::size_t Size>
-  class arraypack {
-  public:
-    T get(std::size_t index) const { return byte_swap_if_big_endian(buffer_[index]); }
-    void set(std::size_t index, T val) { buffer_[index] = byte_swap_if_big_endian(val); }
-  private:
-    std::array<T, Size> buffer_;
   };
 
   template <typename ...Fields>
