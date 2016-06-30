@@ -47,21 +47,21 @@ namespace nocopy {
     };
 
     template <typename T, typename FieldType, typename = hana::when<true>>
-      struct find_return_type {};
+    struct find_return_type {};
     template <typename T>
     struct find_return_type<T, single_field, hana::when<true>> {
       using type = T;
     };
     template <typename T, std::size_t Count>
     struct find_return_type<T, multi_field<Count>
-                          , hana::when<hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>
-      > {
+    , hana::when<hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>
+    > {
       using type = std::array<T, Count>;
     };
     template <typename T, std::size_t Count>
     struct find_return_type<T, multi_field<Count>
-                          , hana::when<!hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>
-      > {
+    , hana::when<!hana::contains(type_set<uint8_t, int8_t, unsigned char, char>::value, hana::type_c<T>)>
+    > {
       using type = arraypack<T, Count>;
     };
     template <typename T, typename FieldType>
