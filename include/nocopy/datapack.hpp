@@ -21,21 +21,21 @@ namespace nocopy {
 
   template <typename ...Fields>
   class datapack {
-    static constexpr auto types = hana::make_tuple(hana::type_c<Fields>...);
+    static constexpr auto types() { return hana::make_tuple(hana::type_c<Fields>...); }
 
     struct alignment_is_larger {
       template <typename X, typename Y>
       constexpr auto operator()(X, Y) {
-        constexpr bool result = X::type::alignment > Y::type::alignment;
+        constexpr bool result = X::type::alignment() > Y::type::alignment();
         return hana::bool_c<result>;
       }
     };
-    static constexpr auto fields_by_alignment = hana::sort(types, alignment_is_larger{});
+    static constexpr auto fields_by_alignment = hana::sort(types(), alignment_is_larger{});
 
     struct offset_fold_impl {
       template <typename Tuple, typename T>
       constexpr auto operator()(Tuple&& tup, T) {
-        return hana::append(tup, hana::back(tup) + T::type::size);
+        return hana::append(tup, hana::back(tup) + T::type::size());
       }
     };
     static constexpr auto offsets = hana::fold_left(
@@ -62,7 +62,7 @@ namespace nocopy {
       return lookup[hana::type_c<T>];
     }
 
-    static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment;
+    static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment();
 
     static constexpr auto align_to(std::uintptr_t offset, std::size_t alignment) {
       return offset + (((~offset) + 1) & (alignment - 1));
@@ -72,13 +72,18 @@ namespace nocopy {
     static_assert(sizeof(align_type) == max_alignment, "type used for alignment must be exactly the max alignment in size");
 
   public:
-    static constexpr auto alignment = max_alignment;
-    static constexpr auto packed_size = align_to(hana::back(offsets), alignment);
-    static_assert(packed_size % alignment == 0, "");
+    static constexpr auto alignment() { return max_alignment; }
+    static constexpr auto packed_size() { return align_to(hana::back(offsets), alignment()); }
+    static_assert(packed_size() % alignment() == 0, "");
+
+    template <typename Field>
+    constexpr bool has() const {
+      return hana::contains(types(), hana::type_c<Field>);
+    }
 
     template <typename Field>
     decltype(auto) get() {
-      assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
+      assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
 
       using return_type = typename Field::return_type;
       return detail::field_getter<return_type>::get(
@@ -88,7 +93,7 @@ namespace nocopy {
 
     template <typename Field>
     decltype(auto) get() const {
-      assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
+      assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
 
       using return_type = typename Field::return_type;
       return detail::field_getter<return_type const>::get(
@@ -98,7 +103,7 @@ namespace nocopy {
 
     template <typename Field>
     void set(typename Field::return_type val) {
-      assert(reinterpret_cast<std::uintptr_t>(this) % alignment == 0);
+      assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
 
       using return_type = typename Field::return_type;
       detail::field_setter<return_type>::set(
@@ -123,7 +128,7 @@ namespace nocopy {
       );
     }
 
-    std::array<align_type, packed_size / alignment> buffer_;
+    std::array<align_type, packed_size() / alignment()> buffer_;
   };
 }
 

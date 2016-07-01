@@ -76,7 +76,7 @@ namespace nocopy {
     };
     template <typename T>
     struct find_alignment<T, hana::when<is_datapack<T>::value>> {
-      static constexpr std::size_t result = T::alignment;
+      static constexpr std::size_t result = T::alignment();
     };
   }
 }
