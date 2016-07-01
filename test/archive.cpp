@@ -19,10 +19,10 @@ nocopy::archive_t< //                                   |  |
   Version //                                            v  v
 , nocopy::version_range< measurement_fields::delta,     0    >
 , nocopy::version_range< measurement_fields::first,     0, 1 >
-, nocopy::version_range< measurement_fields::first,     3, 5 >
-, nocopy::version_range< measurement_fields::second,    2, 4 >
 , nocopy::version_range< measurement_fields::coords,    0    >
 , nocopy::version_range< measurement_fields::locations, 1    >
+, nocopy::version_range< measurement_fields::second,    2, 4 >
+, nocopy::version_range< measurement_fields::first,     3, 5 >
 >;
 
 SCENARIO("archive") {
