@@ -82,27 +82,19 @@ SCENARIO("datapack") {
     }
 
     THEN("calling get on a scalar field returns by value") {
-      REQUIRE(static_cast<bool>(
-        hana::type_c<decltype(measured.get<first>())> == hana::type_c<uint32_t>
-      ));
+      REQUIRE((std::is_same<decltype(measured.get<first>()), uint32_t>::value));
     }
 
     THEN("calling get on an array field returns a std::array reference") {
-      REQUIRE(static_cast<bool>(
-        hana::type_c<decltype(measured.get<coords>())> == hana::type_c<std::array<uint8_t, 10>&>
-      ));
+      REQUIRE((std::is_same<decltype(measured.get<coords>()), std::array<uint8_t, 10>&>::value));
     }
 
     THEN("calling get on an array field returns a std::array reference") {
-      REQUIRE(static_cast<bool>(
-        hana::type_c<decltype(measured.get<coords>())> == hana::type_c<std::array<uint8_t, 10>&>
-      ));
+      REQUIRE((std::is_same<decltype(measured.get<coords>()), std::array<uint8_t, 10>&>::value));
     }
 
     THEN("calling get on an arraypack field returns an arraypack reference") {
-      REQUIRE(static_cast<bool>(
-        hana::type_c<decltype(measured.get<locations>())> == hana::type_c<nocopy::arraypack<uint32_t, 20>&>
-      ));
+      REQUIRE((std::is_same<decltype(measured.get<locations>()), nocopy::arraypack<uint32_t, 20>&>::value));
     }
 
     WHEN("a const reference is taken") {
@@ -117,21 +109,15 @@ SCENARIO("datapack") {
       }
 
       THEN("const doesn't leak to by-value types") {
-        REQUIRE(static_cast<bool>(
-          hana::type_c<decltype(cmeasured.get<delta>())> == hana::type_c<float>
-        ));
+        REQUIRE((std::is_same<decltype(cmeasured.get<delta>()), float>::value));
       }
 
       THEN("calling get on an array field returns a const std::array reference") {
-        REQUIRE(static_cast<bool>(
-          hana::type_c<decltype(cmeasured.get<coords>())> == hana::type_c<std::array<uint8_t, 10> const&>
-        ));
+        REQUIRE((std::is_same<decltype(cmeasured.get<coords>()), std::array<uint8_t, 10> const&>::value));
       }
 
       THEN("calling get on an arraypack field returns a const arraypack reference") {
-        REQUIRE(static_cast<bool>(
-          hana::type_c<decltype(cmeasured.get<locations>())> == hana::type_c<nocopy::arraypack<uint32_t, 20> const&>
-        ));
+        REQUIRE((std::is_same<decltype(cmeasured.get<locations>()), nocopy::arraypack<uint32_t, 20> const&>::value));
       }
     }
   }
