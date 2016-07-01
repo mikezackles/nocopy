@@ -1,6 +1,7 @@
 #ifndef UUID_842939A6_E8D2_4609_9A12_17E3946609D6
 #define UUID_842939A6_E8D2_4609_9A12_17E3946609D6
 
+#include "ignore_warnings_from_dependencies.hpp"
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>

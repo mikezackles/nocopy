@@ -1,6 +1,8 @@
 #ifndef UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 #define UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 
+#include "type_set.hpp"
+
 #include "ignore_warnings_from_dependencies.hpp"
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/set.hpp>
@@ -22,11 +24,6 @@ namespace nocopy {
 
   namespace detail {
     namespace hana = boost::hana;
-
-    template <typename ...Ts>
-    struct type_set {
-      static constexpr auto value = hana::make_set(hana::type_c<Ts>...);
-    };
 
     template <typename T>
     struct is_datapack {

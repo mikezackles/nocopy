@@ -2,8 +2,6 @@
 
 #include <nocopy.hpp>
 
-namespace hana = boost::hana;
-
 namespace measurement_fields {
   NOCOPY_FIELD(delta, float);
   NOCOPY_FIELD(first, uint32_t);
