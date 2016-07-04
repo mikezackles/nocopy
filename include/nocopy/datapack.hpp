@@ -1,7 +1,7 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
-#include "detail/field_accessors.hpp"
+#include "detail/traits.hpp"
 #include "static_asserts.hpp"
 
 #include <cassert>
@@ -26,7 +26,8 @@ namespace nocopy {
     struct alignment_is_larger {
       template <typename X, typename Y>
       constexpr auto operator()(X, Y) {
-        constexpr bool result = X::type::alignment() > Y::type::alignment();
+        constexpr bool result = detail::field_traits<typename X::type>::alignment
+          > detail::field_traits<typename Y::type>::alignment;
         return hana::bool_c<result>;
       }
     };
@@ -35,7 +36,7 @@ namespace nocopy {
     struct offset_fold_impl {
       template <typename Tuple, typename T>
       constexpr auto operator()(Tuple&& tup, T) {
-        return hana::append(tup, hana::back(tup) + T::type::size());
+        return hana::append(tup, hana::back(tup) + detail::field_traits<typename T::type>::size);
       }
     };
     static constexpr auto offsets = hana::fold_left(
@@ -62,7 +63,7 @@ namespace nocopy {
       return lookup[hana::type_c<T>];
     }
 
-    static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment();
+    static constexpr auto max_alignment = detail::field_traits<typename decltype(+hana::front(fields_by_alignment))::type>::alignment;
 
     static constexpr auto align_to(std::uintptr_t offset, std::size_t alignment) {
       return offset + (((~offset) + 1) & (alignment - 1));
@@ -82,52 +83,22 @@ namespace nocopy {
     }
 
     template <typename Field>
-    decltype(auto) get() {
+    auto const& get() const {
       assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
 
-      using return_type = typename Field::return_type;
-      return detail::field_getter<return_type>::get(
-        get_reference<Field>()
+      return *reinterpret_cast<typename detail::field_traits<Field>::return_type*>(
+        reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
       );
     }
 
     template <typename Field>
-    decltype(auto) get() const {
-      assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
-
-      using return_type = typename Field::return_type;
-      return detail::field_getter<return_type const>::get(
-        get_reference<Field>()
-      );
-    }
-
-    template <typename Field>
-    void set(typename Field::return_type val) {
-      assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
-
-      using return_type = typename Field::return_type;
-      detail::field_setter<return_type>::set(
-        get_reference<Field>()
-      , val
+    auto& get() {
+      return const_cast<typename detail::field_traits<Field>::return_type&>(
+        static_cast<datapack const&>(*this).template get<Field>()
       );
     }
 
   private:
-    template <typename Field>
-    auto const& get_reference() const {
-      return *reinterpret_cast<typename Field::return_type*>(
-        reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
-      );
-    }
-
-    template <typename Field>
-    auto& get_reference() {
-      // it was less ugly to duplicate than to try to call the const-version here
-      return *reinterpret_cast<typename Field::return_type*>(
-        reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
-      );
-    }
-
     std::array<align_type, packed_size() / alignment()> buffer_;
   };
 }

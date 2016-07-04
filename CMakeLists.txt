@@ -40,7 +40,7 @@ target_all_warnings_except(tests
   -Wno-c++98-compat-pedantic
   GCC
   # gcc warnings
-  -Wno-unknown-pragmas
+  -Wno-unknown-pragmas # catch
   )
 
 target_link_libraries(tests nocopy)

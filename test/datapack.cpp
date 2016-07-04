@@ -61,26 +61,26 @@ SCENARIO("datapack") {
   GIVEN("an initialized datapack") {
     using namespace measurement_fields;
     measurement measured{};
-    measured.set<delta>(0.5);
-    measured.set<first>(1001);
-    measured.set<second>(4);
+    measured.get<delta>() = 0.5;
+    measured.get<first>() = 1001;
+    measured.get<second>() = 4;
     measured.get<coords>()[4] = 5;
-    measured.get<locations>().set(12, 42);
+    measured.get<locations>()[12] = 42;
 
     THEN("it can be unpacked") {
       REQUIRE(measured.get<delta>() == Approx(0.5));
       REQUIRE(measured.get<first>() == 1001);
       REQUIRE(measured.get<second>() == 4);
       REQUIRE(measured.get<coords>()[4] == 5);
-      REQUIRE(measured.get<locations>().get(12) == 42);
+      REQUIRE(measured.get<locations>()[12] == 42);
     }
 
     THEN("its largest alignment divides its size") {
       REQUIRE(sizeof(measurement) % sizeof(uint32_t) == 0);
     }
 
-    THEN("calling get on a scalar field returns by value") {
-      REQUIRE((std::is_same<decltype(measured.get<first>()), uint32_t>::value));
+    THEN("calling get on a scalar field returns a box reference") {
+      REQUIRE((std::is_same<decltype(measured.get<first>()), nocopy::box<uint32_t>&>::value));
     }
 
     THEN("calling get on an array field returns a std::array reference") {
@@ -92,7 +92,7 @@ SCENARIO("datapack") {
     }
 
     THEN("calling get on an arraypack field returns an arraypack reference") {
-      REQUIRE((std::is_same<decltype(measured.get<locations>()), nocopy::arraypack<uint32_t, 20>&>::value));
+      REQUIRE((std::is_same<decltype(measured.get<locations>()), std::array<nocopy::box<uint32_t>, 20>&>::value));
     }
 
     WHEN("a const reference is taken") {
@@ -103,11 +103,11 @@ SCENARIO("datapack") {
         REQUIRE(cmeasured.get<first>() == 1001);
         REQUIRE(cmeasured.get<second>() == 4);
         REQUIRE(cmeasured.get<coords>()[4] == 5);
-        REQUIRE(cmeasured.get<locations>().get(12) == 42);
+        REQUIRE(cmeasured.get<locations>()[12] == 42);
       }
 
-      THEN("const doesn't leak to by-value types") {
-        REQUIRE((std::is_same<decltype(cmeasured.get<delta>()), float>::value));
+      THEN("accessing boxed fields returns a const reference") {
+        REQUIRE((std::is_same<decltype(cmeasured.get<delta>()), nocopy::box<float> const&>::value));
       }
 
       THEN("calling get on an array field returns a const std::array reference") {
@@ -115,7 +115,7 @@ SCENARIO("datapack") {
       }
 
       THEN("calling get on an arraypack field returns a const arraypack reference") {
-        REQUIRE((std::is_same<decltype(cmeasured.get<locations>()), nocopy::arraypack<uint32_t, 20> const&>::value));
+        REQUIRE((std::is_same<decltype(cmeasured.get<locations>()), std::array<nocopy::box<uint32_t>, 20> const&>::value));
       }
     }
   }
@@ -125,12 +125,12 @@ SCENARIO("datapack") {
     namespace m = measurement_fields;
     experiment exp{};
 
-    exp.get<e::measure1>().set<m::second>(5);
-    exp.get<e::more_measurements>().get(4).set<m::second>(12);
+    exp.get<e::measure1>().get<m::second>() = 5;
+    exp.get<e::more_measurements>()[4].get<m::second>() = 12;
 
     THEN("it can be unpacked") {
       REQUIRE(exp.get<e::measure1>().get<m::second>() == 5);
-      REQUIRE(exp.get<e::more_measurements>().get(4).get<m::second>() == 12);
+      REQUIRE(exp.get<e::more_measurements>()[4].get<m::second>() == 12);
     }
   }
 }
