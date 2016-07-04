@@ -24,16 +24,27 @@ target_include_directories(nocopy
 # TODO - whitelist features here if necessary
 target_use_modern_cxx(nocopy TYPE INTERFACE)
 
-add_executable(tests
+set(test_sources
   "test/main.cpp"
   "test/archive.cpp"
   "test/datapack.cpp")
 
-target_include_directories(tests
+add_executable(little_endian_tests ${test_sources})
+add_executable(big_endian_tests ${test_sources})
+
+target_include_directories(little_endian_tests
   PRIVATE
   "${CMAKE_SOURCE_DIR}/bundle/catch/include")
 
-target_all_warnings_except(tests
+target_include_directories(big_endian_tests
+  PRIVATE
+  "${CMAKE_SOURCE_DIR}/bundle/catch/include")
+
+target_compile_definitions(big_endian_tests
+  PRIVATE
+  NOCOPY_BIGENDIAN)
+
+set(shared_warnings
   CLANG
   # clang warnings
   -Wno-c++98-compat
@@ -42,8 +53,12 @@ target_all_warnings_except(tests
   # gcc warnings
   -Wno-unknown-pragmas # catch
   )
+target_all_warnings_except(little_endian_tests ${shared_warnings})
+target_all_warnings_except(big_endian_tests ${shared_warnings})
 
-target_link_libraries(tests nocopy)
+target_link_libraries(little_endian_tests nocopy)
+target_link_libraries(big_endian_tests nocopy)
 
 enable_testing()
-add_test(tests tests)
+add_test(little_endian little_endian_tests)
+add_test(big_endian big_endian_tests)
