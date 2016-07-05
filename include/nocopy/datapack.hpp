@@ -69,9 +69,6 @@ namespace nocopy {
       return offset + (((~offset) + 1) & (alignment - 1));
     }
 
-    using align_type = typename std::aligned_storage<max_alignment, max_alignment>::type;
-    static_assert(sizeof(align_type) == max_alignment, "type used for alignment must be exactly the max alignment in size");
-
   public:
     static constexpr auto alignment() { return max_alignment; }
     static constexpr auto packed_size() { return align_to(hana::back(offsets), alignment()); }
@@ -99,7 +96,7 @@ namespace nocopy {
     }
 
   private:
-    std::array<align_type, packed_size() / alignment()> buffer_;
+    alignas(alignment()) std::array<unsigned char, packed_size()> buffer_;
   };
 }
 
