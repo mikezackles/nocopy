@@ -7,7 +7,7 @@
 namespace nocopy {
   namespace detail {
     template <typename Scalar, typename = hana::when<true>>
-    struct converter {
+    struct little_endian {
       static_assert(1 < sizeof(Scalar) && sizeof(Scalar) <= 8
       , "byte swap not supported for this scalar");
     };
@@ -15,7 +15,7 @@ namespace nocopy {
     // The goal here is to keep the code simple and standards compliant for now,
     // hoping that compilers will be smart enough to optimize.
     template <typename Scalar>
-    struct converter<Scalar, hana::when<sizeof(Scalar) == 2>> {
+    struct little_endian<Scalar, hana::when<sizeof(Scalar) == 2>> {
       using byte_array = std::array<unsigned char, 2>;
       static Scalar load(byte_array const& source) {
         return
@@ -32,7 +32,7 @@ namespace nocopy {
     };
 
     template <typename Scalar>
-    struct converter<Scalar, hana::when<sizeof(Scalar) == 4 && !std::is_floating_point<Scalar>::value>> {
+    struct little_endian<Scalar, hana::when<sizeof(Scalar) == 4 && !std::is_floating_point<Scalar>::value>> {
       using byte_array = std::array<unsigned char, 4>;
       static Scalar load(byte_array const& source) {
         return
@@ -55,7 +55,7 @@ namespace nocopy {
     };
 
     template <typename Scalar>
-    struct converter<Scalar, hana::when<sizeof(Scalar) == 8 && !std::is_floating_point<Scalar>::value>> {
+    struct little_endian<Scalar, hana::when<sizeof(Scalar) == 8 && !std::is_floating_point<Scalar>::value>> {
       using byte_array = std::array<unsigned char, 8>;
       static Scalar load(byte_array const& source) {
         return
@@ -89,17 +89,17 @@ namespace nocopy {
       }
     };
 
-    template <std::size_t Size> struct converter_type;
-    template <> struct converter_type<4> { using type = uint32_t; };
-    template <> struct converter_type<8> { using type = uint64_t; };
-    template <std::size_t Size> using converter_t = typename converter_type<Size>::type;
+    template <std::size_t Size> struct get_proxy;
+    template <> struct get_proxy<4> { using type = uint32_t; };
+    template <> struct get_proxy<8> { using type = uint64_t; };
+    template <std::size_t Size> using get_proxy_t = typename get_proxy<Size>::type;
 
     template <typename Scalar>
-    struct converter<Scalar, hana::when<std::is_floating_point<Scalar>::value>> {
+    struct little_endian<Scalar, hana::when<std::is_floating_point<Scalar>::value>> {
       using byte_array = std::array<unsigned char, 4>;
-      using proxy_type = converter_t<sizeof(Scalar)>;
+      using proxy_type = get_proxy_t<sizeof(Scalar)>;
       static Scalar load(byte_array const& source) {
-        proxy_type tmp = converter<proxy_type>::load(source);
+        proxy_type tmp = little_endian<proxy_type>::load(source);
         Scalar result;
         std::memcpy(&result, &tmp, sizeof(Scalar));
         return result;
@@ -107,7 +107,7 @@ namespace nocopy {
       static void store(Scalar source, byte_array& target) {
         proxy_type tmp;
         std::memcpy(&tmp, &source, sizeof(Scalar));
-        converter<proxy_type>::store(tmp, target);
+        little_endian<proxy_type>::store(tmp, target);
       }
     };
   }
@@ -117,10 +117,10 @@ namespace nocopy {
     static_assert(std::is_scalar<Scalar>::value, "boxes are for scalar types");
   public:
     box& operator=(Scalar scalar) {
-      detail::converter<Scalar>::store(scalar, buffer_);
+      detail::little_endian<Scalar>::store(scalar, buffer_);
       return *this;
     }
-    operator Scalar() const { return detail::converter<Scalar>::load(buffer_); }
+    operator Scalar() const { return detail::little_endian<Scalar>::load(buffer_); }
   private:
     alignas(sizeof(Scalar)) std::array<unsigned char, sizeof(Scalar)> buffer_;
   };
