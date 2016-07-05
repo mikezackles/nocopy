@@ -9,7 +9,7 @@ namespace nocopy {
   namespace hana = boost::hana;
 
   template <typename ...Fields>
-  class datapack {
+  class datapack final {
     using fieldpack = detail::field_packer<Fields...>;
   public:
     static constexpr auto alignment() { return fieldpack::alignment; }
