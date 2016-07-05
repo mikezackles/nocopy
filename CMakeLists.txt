@@ -42,7 +42,7 @@ target_include_directories(big_endian_tests
 
 target_compile_definitions(big_endian_tests
   PRIVATE
-  NOCOPY_BIGENDIAN)
+  NOCOPY_LITTLEENDIAN=0)
 
 set(shared_warnings
   CLANG
