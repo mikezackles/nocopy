@@ -28,49 +28,43 @@ nocopy::archive_t< //                                   |  |
 SCENARIO("archive") {
   GIVEN("a versioned archive") {
     namespace m = measurement_fields;
-    measurement<0> measure0{};
-    measurement<1> measure1{};
-    measurement<2> measure2{};
-    measurement<3> measure3{};
-    measurement<4> measure4{};
-    measurement<5> measure5{};
 
     THEN("the correct fields should be present") {
-      REQUIRE(measure0.has<m::delta>());
-      REQUIRE(measure0.has<m::first>());
-      REQUIRE(!measure0.has<m::second>());
-      REQUIRE(measure0.has<m::coords>());
-      REQUIRE(!measure0.has<m::locations>());
+      REQUIRE(measurement<0>::has<m::delta>());
+      REQUIRE(measurement<0>::has<m::first>());
+      REQUIRE(!measurement<0>::has<m::second>());
+      REQUIRE(measurement<0>::has<m::coords>());
+      REQUIRE(!measurement<0>::has<m::locations>());
 
-      REQUIRE(measure1.has<m::delta>());
-      REQUIRE(measure1.has<m::first>());
-      REQUIRE(!measure1.has<m::second>());
-      REQUIRE(measure1.has<m::coords>());
-      REQUIRE(measure1.has<m::locations>());
+      REQUIRE(measurement<1>::has<m::delta>());
+      REQUIRE(measurement<1>::has<m::first>());
+      REQUIRE(!measurement<1>::has<m::second>());
+      REQUIRE(measurement<1>::has<m::coords>());
+      REQUIRE(measurement<1>::has<m::locations>());
 
-      REQUIRE(measure2.has<m::delta>());
-      REQUIRE(!measure2.has<m::first>());
-      REQUIRE(measure2.has<m::second>());
-      REQUIRE(measure2.has<m::coords>());
-      REQUIRE(measure2.has<m::locations>());
+      REQUIRE(measurement<2>::has<m::delta>());
+      REQUIRE(!measurement<2>::has<m::first>());
+      REQUIRE(measurement<2>::has<m::second>());
+      REQUIRE(measurement<2>::has<m::coords>());
+      REQUIRE(measurement<2>::has<m::locations>());
 
-      REQUIRE(measure3.has<m::delta>());
-      REQUIRE(measure3.has<m::first>());
-      REQUIRE(measure3.has<m::second>());
-      REQUIRE(measure3.has<m::coords>());
-      REQUIRE(measure3.has<m::locations>());
+      REQUIRE(measurement<3>::has<m::delta>());
+      REQUIRE(measurement<3>::has<m::first>());
+      REQUIRE(measurement<3>::has<m::second>());
+      REQUIRE(measurement<3>::has<m::coords>());
+      REQUIRE(measurement<3>::has<m::locations>());
 
-      REQUIRE(measure4.has<m::delta>());
-      REQUIRE(measure4.has<m::first>());
-      REQUIRE(measure4.has<m::second>());
-      REQUIRE(measure4.has<m::coords>());
-      REQUIRE(measure4.has<m::locations>());
+      REQUIRE(measurement<4>::has<m::delta>());
+      REQUIRE(measurement<4>::has<m::first>());
+      REQUIRE(measurement<4>::has<m::second>());
+      REQUIRE(measurement<4>::has<m::coords>());
+      REQUIRE(measurement<4>::has<m::locations>());
 
-      REQUIRE(measure5.has<m::delta>());
-      REQUIRE(measure5.has<m::first>());
-      REQUIRE(!measure5.has<m::second>());
-      REQUIRE(measure5.has<m::coords>());
-      REQUIRE(measure5.has<m::locations>());
+      REQUIRE(measurement<5>::has<m::delta>());
+      REQUIRE(measurement<5>::has<m::first>());
+      REQUIRE(!measurement<5>::has<m::second>());
+      REQUIRE(measurement<5>::has<m::coords>());
+      REQUIRE(measurement<5>::has<m::locations>());
     }
   }
 }
