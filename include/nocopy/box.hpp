@@ -100,11 +100,11 @@ namespace nocopy {
     operator Scalar() const { return byte_swap_if_big_endian(scalar_); }
   private:
     static Scalar byte_swap_if_big_endian(Scalar scalar) {
-        //#if NOCOPY_LITTLEENDIAN
-        //  return scalar;
-        //#else
+      #if NOCOPY_LITTLEENDIAN
+        return scalar;
+      #else
         return detail::swapper<Scalar>::swap(scalar);
-        //#endif
+      #endif
     }
     Scalar scalar_;
   };
