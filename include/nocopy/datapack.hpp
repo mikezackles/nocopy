@@ -6,8 +6,6 @@
 #include "static_asserts.hpp"
 
 namespace nocopy {
-  namespace hana = boost::hana;
-
   template <typename ...Fields>
   class datapack final {
     using fieldpack = detail::field_packer<Fields...>;
