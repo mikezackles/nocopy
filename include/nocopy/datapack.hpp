@@ -81,10 +81,8 @@ namespace nocopy {
 
     template <typename Field>
     auto const& get() const {
-      assert(reinterpret_cast<std::uintptr_t>(this) % alignment() == 0);
-
-      return *reinterpret_cast<typename detail::field_traits<Field>::return_type*>(
-        reinterpret_cast<std::uintptr_t>(&buffer_) + get_offset<Field>()
+      return reinterpret_cast<typename detail::field_traits<Field>::return_type const&>(
+        buffer_[get_offset<Field>()]
       );
     }
 
