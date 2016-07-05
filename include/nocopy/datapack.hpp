@@ -8,17 +8,17 @@
 namespace nocopy {
   template <typename ...Fields>
   class datapack final {
-    using fieldpack = detail::field_packer<Fields...>;
+    using fieldpack = detail::field_packer<detail::field_traits<Fields>...>;
   public:
     static constexpr auto alignment() { return fieldpack::alignment; }
 
     template <typename Field>
-    static constexpr bool has() { return fieldpack::template has<Field>(); }
+    static constexpr bool has() { return fieldpack::template has<detail::field_traits<Field>>(); }
 
     template <typename Field>
     auto const& get() const {
       return reinterpret_cast<typename detail::field_traits<Field>::return_type const&>(
-        buffer_[fieldpack::template get_offset<Field>()]
+        buffer_[fieldpack::template get_offset<detail::field_traits<Field>>()]
       );
     }
 

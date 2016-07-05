@@ -1,8 +1,6 @@
 #ifndef UUID_68BDB6D9_BB11_4462_9187_4949324917AE
 #define UUID_68BDB6D9_BB11_4462_9187_4949324917AE
 
-#include "traits.hpp"
-
 #include "ignore_warnings_from_dependencies.hpp"
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/at_key.hpp>
@@ -23,8 +21,7 @@ namespace nocopy { namespace detail {
     struct alignment_is_larger {
       template <typename X, typename Y>
       constexpr auto operator()(X, Y) {
-        constexpr bool result = field_traits<typename X::type>::alignment
-          > field_traits<typename Y::type>::alignment;
+        constexpr bool result = X::type::alignment > Y::type::alignment;
         return hana::bool_c<result>;
       }
     };
@@ -33,7 +30,7 @@ namespace nocopy { namespace detail {
     struct offset_fold_impl {
       template <typename Tuple, typename T>
       constexpr auto operator()(Tuple&& tup, T) {
-        return hana::append(tup, hana::back(tup) + field_traits<typename T::type>::size);
+        return hana::append(tup, hana::back(tup) + T::type::size);
       }
     };
     static constexpr auto offsets = hana::fold_left(
@@ -54,7 +51,7 @@ namespace nocopy { namespace detail {
     , lookup_fold_impl{}
     );
 
-    static constexpr auto max_alignment = field_traits<typename decltype(+hana::front(fields_by_alignment))::type>::alignment;
+    static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment;
 
     static constexpr auto align_to(std::uintptr_t offset, std::size_t alignment) {
       return offset + (((~offset) + 1) & (alignment - 1));
