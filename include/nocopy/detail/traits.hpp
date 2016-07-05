@@ -6,6 +6,7 @@ BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/core/when.hpp>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
+#include <cstdint>
 #include <type_traits>
 
 namespace nocopy {
@@ -89,18 +90,33 @@ namespace nocopy {
       using base_type = find_base_t<field_type>;
       static_assert(
            is_datapack<base_type>::value
+        || (std::is_same<base_type, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) == 4)
+        || (std::is_same<base_type, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) == 8)
+      #ifdef INT8_MAX
         || std::is_same<base_type, int8_t>::value
+      #endif
+      #ifdef UINT8_MAX
         || std::is_same<base_type, uint8_t>::value
+      #endif
+      #ifdef INT16_MAX
         || std::is_same<base_type, int16_t>::value
+      #endif
+      #ifdef UINT16_MAX
         || std::is_same<base_type, uint16_t>::value
+      #endif
+      #ifdef INT32_MAX
         || std::is_same<base_type, int32_t>::value
+      #endif
+      #ifdef UINT32_MAX
         || std::is_same<base_type, uint32_t>::value
-        || std::is_same<base_type, float>::value
+      #endif
+      #ifdef INT64_MAX
+        || std::is_same<base_type, int64_t>::value
+      #endif
+      #ifdef UINT64_MAX
+        || std::is_same<base_type, uint64_t>::value
+      #endif
       , "unsupported field type"
-      );
-      static_assert(
-        !std::is_floating_point<base_type>::value || std::numeric_limits<float>::is_iec559
-      , "must use IEC 559 to enable floating point support"
       );
       using return_type = find_return_type_t<field_type>;
       static constexpr auto alignment = alignment_for<base_type>::result;
