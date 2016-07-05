@@ -100,7 +100,7 @@ namespace nocopy {
 
     template <typename Scalar>
     struct little_endian<Scalar, hana::when<std::is_floating_point<Scalar>::value>> {
-      using byte_array = std::array<unsigned char, 4>;
+      using byte_array = std::array<unsigned char, sizeof(Scalar)>;
       using proxy_type = get_proxy_t<sizeof(Scalar)>;
       static Scalar load(byte_array const& source) {
         proxy_type tmp = little_endian<proxy_type>::load(source);
