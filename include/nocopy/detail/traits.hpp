@@ -17,7 +17,7 @@ namespace nocopy {
   class box;
 
   template <typename T, std::size_t Count>
-  struct multi;
+  struct array;
 
   namespace detail {
     namespace hana = boost::hana;
@@ -48,12 +48,12 @@ namespace nocopy {
       using type = boxer_t<T>;
     };
     template <typename FieldType, std::size_t Count>
-    struct find_return_type<multi<FieldType, Count>> {
+    struct find_return_type<array<FieldType, Count>> {
       using type = std::array<typename find_return_type<FieldType>::type, Count>;
     };
     template <typename NestedFieldType, std::size_t NestedCount, std::size_t Count>
-    struct find_return_type<multi<multi<NestedFieldType, NestedCount>, Count>> {
-      using nested = find_return_type<multi<NestedFieldType, NestedCount>>;
+    struct find_return_type<array<array<NestedFieldType, NestedCount>, Count>> {
+      using nested = find_return_type<array<NestedFieldType, NestedCount>>;
       using type = std::array<typename nested::type, Count>;
     };
     template <typename FieldType>
@@ -64,12 +64,12 @@ namespace nocopy {
       using type = T;
     };
     template <typename FieldType, std::size_t Count>
-    struct find_base_type<multi<FieldType, Count>> {
+    struct find_base_type<array<FieldType, Count>> {
       using type = typename find_base_type<FieldType>::type;
     };
     template <typename NestedFieldType, std::size_t NestedCount, std::size_t Count>
-    struct find_base_type<multi<multi<NestedFieldType, NestedCount>, Count>> {
-      using nested = find_base_type<multi<NestedFieldType, NestedCount>>;
+    struct find_base_type<array<array<NestedFieldType, NestedCount>, Count>> {
+      using nested = find_base_type<array<NestedFieldType, NestedCount>>;
       using type = typename nested::type;
     };
     template <typename FieldType>

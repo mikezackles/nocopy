@@ -5,8 +5,8 @@
 
 namespace nocopy {
   template <typename T, std::size_t Count>
-  struct multi {
-    static_assert(Count > 0, "multi field must have count greater than 0");
+  struct array {
+    static_assert(Count > 0, "array field must have count greater than 0");
   };
 }
 
@@ -19,7 +19,7 @@ namespace nocopy {
 
 #define NOCOPY_ARRAY(field_name, type, size) \
   struct field_name { \
-    using field_type = ::nocopy::multi<type, size>; \
+    using field_type = ::nocopy::array<type, size>; \
     static constexpr auto name() { return #field_name; } \
   }
 #endif
