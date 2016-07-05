@@ -53,7 +53,9 @@ namespace nocopy { namespace detail {
 
     static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment;
 
-    static constexpr auto align_to(std::uintptr_t offset, std::size_t alignment) {
+    // It should be safe to assume uintptr_t >= size_t, so we go ahead and
+    // convert alignment from size_t to uintptr_t
+    static constexpr auto align_to(std::uintptr_t offset, std::uintptr_t alignment) {
       return offset + (((~offset) + 1) & (alignment - 1));
     }
 
