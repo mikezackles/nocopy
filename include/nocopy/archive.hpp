@@ -1,7 +1,6 @@
 #ifndef UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 #define UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 
-#include "detail/type_set.hpp"
 #include "static_asserts.hpp"
 
 #include "detail/ignore_warnings_from_dependencies.hpp"

@@ -1,14 +1,12 @@
 #ifndef UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 #define UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 
-#include "type_set.hpp"
-
 #include "ignore_warnings_from_dependencies.hpp"
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
-#include <boost/hana/set.hpp>
-#include <boost/hana/type.hpp>
 #include <boost/hana/core/when.hpp>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+
+#include <type_traits>
 
 namespace nocopy {
   template <typename ...Ts>
@@ -89,10 +87,15 @@ namespace nocopy {
     struct field_traits {
       using field_type = typename Field::field_type;
       using base_type = find_base_t<field_type>;
-      static constexpr auto allowed_types =
-        detail::type_set<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, float>::value;
       static_assert(
-        is_datapack<base_type>::value || hana::contains(allowed_types, hana::type_c<base_type>)
+           is_datapack<base_type>::value
+        || std::is_same<base_type, int8_t>::value
+        || std::is_same<base_type, uint8_t>::value
+        || std::is_same<base_type, int16_t>::value
+        || std::is_same<base_type, uint16_t>::value
+        || std::is_same<base_type, int32_t>::value
+        || std::is_same<base_type, uint32_t>::value
+        || std::is_same<base_type, float>::value
       , "unsupported field type"
       );
       static_assert(
