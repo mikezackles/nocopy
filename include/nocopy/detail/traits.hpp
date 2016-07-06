@@ -84,40 +84,45 @@ namespace nocopy {
       static constexpr std::size_t result = sizeof(T);
     };
 
+    template <typename BaseType>
+    struct check_whitelist {
+      static_assert(
+           is_datapack<BaseType>::value
+        || (std::is_same<BaseType, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) == 4)
+        || (std::is_same<BaseType, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) == 8)
+      #ifdef INT8_MAX
+        || std::is_same<BaseType, int8_t>::value
+      #endif
+      #ifdef UINT8_MAX
+        || std::is_same<BaseType, uint8_t>::value
+      #endif
+      #ifdef INT16_MAX
+        || std::is_same<BaseType, int16_t>::value
+      #endif
+      #ifdef UINT16_MAX
+        || std::is_same<BaseType, uint16_t>::value
+      #endif
+      #ifdef INT32_MAX
+        || std::is_same<BaseType, int32_t>::value
+      #endif
+      #ifdef UINT32_MAX
+        || std::is_same<BaseType, uint32_t>::value
+      #endif
+      #ifdef INT64_MAX
+        || std::is_same<BaseType, int64_t>::value
+      #endif
+      #ifdef UINT64_MAX
+        || std::is_same<BaseType, uint64_t>::value
+      #endif
+      , "unsupported field type"
+      );
+    };
+
     template <typename Field>
     struct field_traits {
       using field_type = typename Field::field_type;
       using base_type = find_base_t<field_type>;
-      static_assert(
-           is_datapack<base_type>::value
-        || (std::is_same<base_type, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) == 4)
-        || (std::is_same<base_type, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) == 8)
-      #ifdef INT8_MAX
-        || std::is_same<base_type, int8_t>::value
-      #endif
-      #ifdef UINT8_MAX
-        || std::is_same<base_type, uint8_t>::value
-      #endif
-      #ifdef INT16_MAX
-        || std::is_same<base_type, int16_t>::value
-      #endif
-      #ifdef UINT16_MAX
-        || std::is_same<base_type, uint16_t>::value
-      #endif
-      #ifdef INT32_MAX
-        || std::is_same<base_type, int32_t>::value
-      #endif
-      #ifdef UINT32_MAX
-        || std::is_same<base_type, uint32_t>::value
-      #endif
-      #ifdef INT64_MAX
-        || std::is_same<base_type, int64_t>::value
-      #endif
-      #ifdef UINT64_MAX
-        || std::is_same<base_type, uint64_t>::value
-      #endif
-      , "unsupported field type"
-      );
+      using _ = check_whitelist<base_type>;
       using return_type = find_return_type_t<field_type>;
       static constexpr auto alignment = alignment_for<base_type>::result;
       static constexpr auto size = sizeof(return_type);
