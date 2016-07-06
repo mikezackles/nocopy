@@ -1,6 +1,8 @@
 #ifndef UUID_68BDB6D9_BB11_4462_9187_4949324917AE
 #define UUID_68BDB6D9_BB11_4462_9187_4949324917AE
 
+#include "align_to.hpp"
+
 #include "ignore_warnings_from_dependencies.hpp"
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/at_key.hpp>
@@ -52,12 +54,6 @@ namespace nocopy { namespace detail {
     );
 
     static constexpr auto max_alignment = decltype(+hana::front(fields_by_alignment))::type::alignment;
-
-    // It should be safe to assume uintptr_t >= size_t, so we go ahead and
-    // convert alignment from size_t to uintptr_t
-    static constexpr auto align_to(std::uintptr_t offset, std::uintptr_t alignment) {
-      return offset + (((~offset) + 1) & (alignment - 1));
-    }
 
   public:
     static constexpr auto alignment = max_alignment;
