@@ -36,7 +36,7 @@ namespace nocopy { namespace detail {
       }
     };
     static constexpr auto offsets = hana::fold_left(
-      fields_by_alignment, hana::make_tuple(std::uintptr_t{0}), offset_fold_impl{}
+      fields_by_alignment, hana::make_tuple(std::size_t{0}), offset_fold_impl{}
     );
 
     static constexpr auto field_offset_pairs = hana::zip_shortest(fields_by_alignment, offsets);
