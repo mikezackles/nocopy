@@ -31,7 +31,7 @@ SCENARIO("datapack") {
   GIVEN("a datapack-sized buffer of garbage data") {
     using namespace measurement_fields;
     std::array<uint8_t, sizeof(measurement)> buffer;
-    std::fill_n(buffer.begin(), buffer.size(), 1);
+    buffer.fill(1);
 
     WHEN("a default-initialized datapack is constructed from the buffer") {
       auto measurep = new (&buffer) measurement;
