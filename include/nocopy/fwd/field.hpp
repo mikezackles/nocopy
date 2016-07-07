@@ -6,9 +6,6 @@ namespace nocopy {
   struct array {
     static_assert(Count > 0, "array field must have count greater than 0");
   };
-
-  template <typename ...Ts>
-  struct one_of {};
 }
 
 #endif

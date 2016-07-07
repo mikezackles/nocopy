@@ -5,7 +5,7 @@
 
 namespace nocopy {
   template <typename ...Ts>
-  class tagged_union final {
+  class oneof final {
     using tag_type = uint16_t;
 
     static constexpr allowed_types = hana::make_tuple(hana::type_c<detail::field_traits<Ts>>...);
@@ -65,7 +65,7 @@ namespace nocopy {
     template <typename T>
     auto& get_payload(T t) {
       return const_cast<typename T::type::return_type&>(
-        static_cast<tagged_union const&>(*this).get_payload(t)
+        static_cast<oneof const&>(*this).get_payload(t)
       );
     }
 
