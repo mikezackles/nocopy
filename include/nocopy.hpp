@@ -5,6 +5,7 @@
 #include <nocopy/box.hpp>
 #include <nocopy/datapack.hpp>
 #include <nocopy/field.hpp>
+#include <nocopy/oneof.hpp>
 #include <nocopy/version_range.hpp>
 
 #endif
