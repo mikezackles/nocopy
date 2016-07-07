@@ -1,6 +1,7 @@
 #ifndef UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 #define UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 
+#include <nocopy/fwd/datapack.hpp>
 #include <nocopy/static_asserts.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
@@ -11,9 +12,6 @@ END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
 namespace nocopy {
   namespace hana = boost::hana;
-
-  template <typename ...Fields>
-  class datapack;
 
   template <std::size_t Version, typename ...VersionRanges>
   struct archive {

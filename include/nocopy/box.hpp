@@ -1,6 +1,8 @@
 #ifndef UUID_322FB7EB_6C3F_48FE_A851_5A140DE1451C
 #define UUID_322FB7EB_6C3F_48FE_A851_5A140DE1451C
 
+#include <nocopy/fwd/box.hpp>
+
 #include <cstring>
 #include <type_traits>
 

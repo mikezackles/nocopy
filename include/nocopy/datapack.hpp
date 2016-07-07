@@ -1,6 +1,8 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
+#include <nocopy/fwd/datapack.hpp>
+
 #include <nocopy/detail/field_packer.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/static_asserts.hpp>

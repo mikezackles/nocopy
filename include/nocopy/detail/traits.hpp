@@ -1,6 +1,10 @@
 #ifndef UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 #define UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 
+#include <nocopy/fwd/box.hpp>
+#include <nocopy/fwd/datapack.hpp>
+#include <nocopy/fwd/field.hpp>
+
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/core/when.hpp>
@@ -10,15 +14,6 @@ END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <type_traits>
 
 namespace nocopy {
-  template <typename ...Ts>
-  class datapack;
-
-  template <typename T>
-  class box;
-
-  template <typename T, std::size_t Count>
-  struct array;
-
   namespace detail {
     namespace hana = boost::hana;
 

@@ -1,17 +1,8 @@
 #ifndef UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 #define UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 
+#include <nocopy/fwd/field.hpp>
 #include <nocopy/static_asserts.hpp>
-
-namespace nocopy {
-  template <typename T, std::size_t Count>
-  struct array {
-    static_assert(Count > 0, "array field must have count greater than 0");
-  };
-
-  template <typename ...Ts>
-  struct one_of {};
-}
 
 #ifndef NOCOPY_NO_MACROS
 #define NOCOPY_FIELD(field_name, type) \
