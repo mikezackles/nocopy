@@ -2,7 +2,6 @@
 #define UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 
 #include <nocopy/fwd/field.hpp>
-#include <nocopy/static_asserts.hpp>
 
 #ifndef NOCOPY_NO_MACROS
 #define NOCOPY_FIELD(field_name, type) \

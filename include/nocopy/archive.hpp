@@ -2,7 +2,6 @@
 #define UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 
 #include <nocopy/fwd/datapack.hpp>
-#include <nocopy/static_asserts.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES

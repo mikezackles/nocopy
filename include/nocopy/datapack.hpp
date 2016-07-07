@@ -5,7 +5,6 @@
 
 #include <nocopy/detail/field_packer.hpp>
 #include <nocopy/detail/traits.hpp>
-#include <nocopy/static_asserts.hpp>
 
 namespace nocopy {
   template <typename ...Fields>

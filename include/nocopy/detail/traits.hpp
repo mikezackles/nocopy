@@ -54,12 +54,17 @@ namespace nocopy {
     };
     template <typename FieldType, std::size_t Count>
     struct find_return_type<array<FieldType, Count>> {
-      using type = std::array<typename find_return_type<FieldType>::type, Count>;
+      using nested = typename find_return_type<FieldType>::type;
+      using type = std::array<nested, Count>;
+      static_assert(std::is_pod<type>::value, "std::array must be POD");
+      static_assert(sizeof(type) == sizeof(nested) * Count, "std::array contains extra data");
     };
     template <typename NestedFieldType, std::size_t NestedCount, std::size_t Count>
     struct find_return_type<array<array<NestedFieldType, NestedCount>, Count>> {
-      using nested = find_return_type<array<NestedFieldType, NestedCount>>;
-      using type = std::array<typename nested::type, Count>;
+      using nested = typename find_return_type<array<NestedFieldType, NestedCount>>::type;
+      using type = std::array<nested, Count>;
+      static_assert(std::is_pod<type>::value, "std::array must be POD");
+      static_assert(sizeof(type) == sizeof(nested) * Count, "std::array contains extra data");
     };
     template <typename FieldType>
     using find_return_type_t = typename find_return_type<FieldType>::type;
