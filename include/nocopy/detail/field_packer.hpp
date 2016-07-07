@@ -29,15 +29,26 @@ namespace nocopy { namespace detail {
     };
     static constexpr auto fields_by_alignment = hana::sort(fields(), alignment_is_larger{});
 
+    static constexpr auto max_offset = std::numeric_limits<std::size_t>::max();
     struct offset_fold_impl {
       template <typename Tuple, typename T>
       constexpr auto operator()(Tuple&& tup, T) {
-        return hana::append(tup, hana::back(tup) + T::type::size);
+        auto last_offset = hana::back(tup);
+        if (max_offset - last_offset >= T::type::size) {
+          return hana::append(tup, last_offset + T::type::size);
+        } else {
+          // Avoid overflow
+          return hana::append(tup, max_offset);
+        }
       }
     };
     static constexpr auto offsets = hana::fold_left(
       fields_by_alignment, hana::make_tuple(std::size_t{0}), offset_fold_impl{}
     );
+    // Detect overflow - technically this could fail erroneously if the size of
+    // the archive is *exactly* std::size_t
+    static_assert(hana::back(offsets) < max_offset
+    , "this field pack is too large to be addressable on this machine");
 
     static constexpr auto field_offset_pairs = hana::zip_shortest(fields_by_alignment, offsets);
 
