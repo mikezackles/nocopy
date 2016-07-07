@@ -6,9 +6,9 @@ namespace measurement_fields {
   NOCOPY_FIELD(delta, float);
   NOCOPY_FIELD(first, uint32_t);
   NOCOPY_FIELD(second, uint8_t);
-  NOCOPY_ARRAY(third, int8_t, 4);
-  NOCOPY_ARRAY(coords, uint8_t, 10);
-  NOCOPY_ARRAY(locations, uint32_t, 20);
+  NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
+  NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
+  NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
 }
 
 //                             field removed in this version

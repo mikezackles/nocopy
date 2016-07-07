@@ -11,11 +11,7 @@
     static constexpr auto name() { return #field_name; } \
   }
 
-#define NOCOPY_ARRAY(field_name, type, size) \
-  struct field_name { \
-    using field_type = ::nocopy::array<type, size>; \
-    static constexpr auto name() { return #field_name; } \
-  }
+#define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
 #endif
 
 #endif
