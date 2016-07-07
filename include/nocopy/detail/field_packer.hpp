@@ -31,23 +31,29 @@ namespace nocopy { namespace detail {
 
     static constexpr auto max_offset = std::numeric_limits<std::size_t>::max();
     struct offset_fold_impl {
-      template <typename Tuple, typename T>
-      constexpr auto operator()(Tuple&& tup, T) {
-        auto last_offset = hana::back(tup);
+      template <typename Pair, typename T>
+      constexpr auto operator()(Pair&& pair, T) {
+        auto tup = hana::first(pair);
+        auto last_offset = hana::second(pair);
         if (max_offset - last_offset >= T::type::size) {
-          return hana::append(tup, last_offset + T::type::size);
+          auto next_offset = last_offset + T::type::size;
+          return hana::make_pair(hana::append(tup, next_offset), next_offset);
         } else {
           // Avoid overflow
-          return hana::append(tup, max_offset);
+          return hana::make_pair(hana::append(tup, max_offset), max_offset);
         }
       }
     };
-    static constexpr auto offsets = hana::fold_left(
-      fields_by_alignment, hana::make_tuple(std::size_t{0}), offset_fold_impl{}
+    static constexpr auto offsets_and_size = hana::fold_left(
+      fields_by_alignment
+    , hana::make_pair(hana::make_tuple(std::size_t{0}), std::size_t{0})
+    , offset_fold_impl{}
     );
+    static constexpr auto offsets = hana::first(offsets_and_size);
+    static constexpr auto unaligned_size = hana::second(offsets_and_size);
     // Detect overflow - technically this could fail erroneously if the size of
     // the archive is *exactly* std::size_t
-    static_assert(hana::back(offsets) < max_offset
+    static_assert(unaligned_size < max_offset
     , "this field pack is too large to be addressable on this machine");
 
     static constexpr auto field_offset_pairs = hana::zip_shortest(fields_by_alignment, offsets);
@@ -68,7 +74,7 @@ namespace nocopy { namespace detail {
 
   public:
     static constexpr auto alignment = max_alignment;
-    static constexpr auto packed_size = align_to(hana::back(offsets), alignment);
+    static constexpr auto packed_size = align_to(unaligned_size, alignment);
     static_assert(packed_size % alignment == 0, "");
 
     template <typename Field>
