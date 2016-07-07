@@ -6,9 +6,13 @@
 
 #include <nocopy/detail/align_to.hpp>
 
+#include <type_traits>
+
 namespace nocopy {
   template <typename Tag, typename ...Ts>
   class oneof final {
+    static_assert(std::is_unsigned<Tag>, "tag type for oneof must be unsigned");
+
     static constexpr allowed_types = hana::make_tuple(hana::type_c<detail::field_traits<Ts>>...);
     static constexpr auto lookup_type(Tag offset) {
       return hana::get(allowed_types, offset);
