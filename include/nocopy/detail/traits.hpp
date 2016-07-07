@@ -4,12 +4,14 @@
 #include <nocopy/fwd/box.hpp>
 #include <nocopy/fwd/datapack.hpp>
 #include <nocopy/fwd/field.hpp>
+#include <nocopy/fwd/oneof.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/core/when.hpp>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
+#include <array>
 #include <cstdint>
 #include <type_traits>
 
@@ -21,9 +23,17 @@ namespace nocopy {
     struct is_datapack {
       static constexpr bool value = false;
     };
-
     template <typename ...Ts>
     struct is_datapack<datapack<Ts...>> {
+      static constexpr bool value = true;
+    };
+
+    template <typename T>
+    struct is_oneof {
+      static constexpr bool value = false;
+    };
+    template <typename ...Ts>
+    struct is_datapack<oneof<Ts...>> {
       static constexpr bool value = true;
     };
 

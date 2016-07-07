@@ -1,6 +1,8 @@
 #ifndef UUID_421EF854_6D66_42A2_847B_61D932450F88
 #define UUID_421EF854_6D66_42A2_847B_61D932450F88
 
+#include <nocopy/fwd/oneof.hpp>
+
 #include <nocopy/detail/align_to.hpp>
 
 namespace nocopy {
