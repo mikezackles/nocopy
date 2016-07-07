@@ -1,7 +1,7 @@
 #ifndef UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 #define UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 
-#include "ignore_warnings_from_dependencies.hpp"
+#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/core/when.hpp>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES

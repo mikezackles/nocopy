@@ -1,9 +1,9 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
-#include "detail/field_packer.hpp"
-#include "detail/traits.hpp"
-#include "static_asserts.hpp"
+#include <nocopy/detail/field_packer.hpp>
+#include <nocopy/detail/traits.hpp>
+#include <nocopy/static_asserts.hpp>
 
 namespace nocopy {
   template <typename ...Fields>

@@ -1,9 +1,9 @@
 #ifndef UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 #define UUID_711399AD_853A_450B_8DC0_FDBF671931EA
 
-#include "static_asserts.hpp"
+#include <nocopy/static_asserts.hpp>
 
-#include "detail/ignore_warnings_from_dependencies.hpp"
+#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/filter.hpp>
 #include <boost/hana/tuple.hpp>

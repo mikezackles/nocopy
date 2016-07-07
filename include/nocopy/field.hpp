@@ -1,7 +1,7 @@
 #ifndef UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 #define UUID_CA2A183A_D196_4445_B344_55ACD2FB9B0E
 
-#include "static_asserts.hpp"
+#include <nocopy/static_asserts.hpp>
 
 namespace nocopy {
   template <typename T, std::size_t Count>
