@@ -16,7 +16,8 @@ namespace measurement_fields {
 template <std::size_t Version> //                       |  |
 using measurement = //                                  |  |
 nocopy::archive_t< //                                   |  |
-  Version //                                            v  v
+  nocopy::datapack //                                   |  |
+, Version //                                            v  v
 , nocopy::version_range< measurement_fields::delta,     0    >
 , nocopy::version_range< measurement_fields::first,     0, 1 >
 , nocopy::version_range< measurement_fields::coords,    0    >

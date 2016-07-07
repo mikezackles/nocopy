@@ -12,7 +12,7 @@ END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 namespace nocopy {
   namespace hana = boost::hana;
 
-  template <std::size_t Version, typename ...VersionRanges>
+  template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
   struct archive {
   private:
     static constexpr auto fields = hana::make_tuple(hana::type_c<VersionRanges>...);
@@ -25,19 +25,19 @@ namespace nocopy {
     };
     static constexpr auto current_fields = hana::filter(fields, field_is_in_range{});
 
-    struct get_datapack {
+    struct get_type {
       template <typename ...Ts>
       constexpr auto operator()(Ts...) const {
-        return hana::type_c<datapack<typename Ts::type::field...>>;
+        return hana::type_c<Result<typename Ts::type::field...>>;
       }
     };
 
   public:
-    using type = typename decltype(hana::unpack(current_fields, get_datapack{}))::type;
+    using type = typename decltype(hana::unpack(current_fields, get_type{}))::type;
   };
 
-  template <std::size_t Version, typename ...VersionRanges>
-  using archive_t = typename archive<Version, VersionRanges...>::type;
+  template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
+  using archive_t = typename archive<datapack, Version, VersionRanges...>::type;
 }
 
 #endif
