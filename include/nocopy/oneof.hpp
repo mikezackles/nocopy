@@ -1,17 +1,16 @@
 #ifndef UUID_421EF854_6D66_42A2_847B_61D932450F88
 #define UUID_421EF854_6D66_42A2_847B_61D932450F88
 
+#include <nocopy/fwd/box.hpp>
 #include <nocopy/fwd/oneof.hpp>
 
 #include <nocopy/detail/align_to.hpp>
 
 namespace nocopy {
-  template <typename ...Ts>
+  template <typename Tag, typename ...Ts>
   class oneof final {
-    using tag_type = uint16_t;
-
     static constexpr allowed_types = hana::make_tuple(hana::type_c<detail::field_traits<Ts>>...);
-    static constexpr auto lookup_type(tag_type offset) {
+    static constexpr auto lookup_type(Tag offset) {
       return hana::get(allowed_types, offset);
     }
 
@@ -24,11 +23,11 @@ namespace nocopy {
     };
     static constexpr auto payload_alignment = hana::maximum(allowed_types, alignment_ordering{});
 
-    static constexpr auto payload_offset = align_to(sizeof(tag_type), payload_alignment());
+    static constexpr auto payload_offset = align_to(sizeof(Tag), payload_alignment());
 
   public:
     static constexpr auto alignment() {
-      return std::max(payload_alignment, sizeof(tag_type));
+      return std::max(payload_alignment, sizeof(Tag));
     };
     static constexpr auto size() {
       return align_to(payload_offset + payload_alignment, alignment());
@@ -49,12 +48,12 @@ namespace nocopy {
       set_tag(tag_for_type(hana::type_c<T>));
     }
   private:
-    tag_type get_tag() const {
-      return reinterpret_cast<box<tag_type> const&>(&buffer_[0]);
+    Tag get_tag() const {
+      return reinterpret_cast<box<Tag> const&>(&buffer_[0]);
     }
 
-    void set_tag(tag_type tag) {
-      reinterpret_cast<box<tag_type>&>(&buffer_[0]) = tag;
+    void set_tag(Tag tag) {
+      reinterpret_cast<box<Tag>&>(&buffer_[0]) = tag;
     }
 
     template <typename T>

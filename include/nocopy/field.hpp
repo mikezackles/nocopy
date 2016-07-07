@@ -11,6 +11,8 @@
   }
 
 #define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
+#define NOCOPY_ONEOF(...) ::nocopy::oneof<uint8_t, __VA_ARGS__>
+#define NOCOPY_ONEOF16(...) ::nocopy::oneof<uint16_t, __VA_ARGS__>
 #endif
 
 #endif
