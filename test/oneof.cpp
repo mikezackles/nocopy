@@ -17,43 +17,46 @@ TEST_CASE("all fields can be set", "[oneof]") {
   abc instance{};
 
   SECTION("first field") {
-    instance.get<abc_fields::a>() = 4.5;
+    using namespace abc_fields;
+    instance.get<a>() = 4.5;
 
     bool a_was_visited = false;
     instance.visit(
-      [&](abc_fields::a, float val) {
+      [&](a, float val) {
         a_was_visited = true;
         REQUIRE(val == Approx(4.5));
       }
-    , [](abc_fields::b, uint32_t) {}
-    , [](abc_fields::c, uint8_t) {}
+    , [](b, uint32_t) {}
+    , [](c, uint8_t) {}
     );
     REQUIRE(a_was_visited);
   }
 
   SECTION("second field") {
-    instance.get<abc_fields::b>() = 23;
+    using namespace abc_fields;
+    instance.get<b>() = 23;
 
     bool b_was_visited = false;
     instance.visit(
-      [](abc_fields::a, float) {}
-    , [&](abc_fields::b, uint32_t val) {
+      [](a, float) {}
+    , [&](b, uint32_t val) {
         b_was_visited = true;
         REQUIRE(val == 23);
       }
-    , [](abc_fields::c, uint8_t) {}
+    , [](c, uint8_t) {}
     );
     REQUIRE(b_was_visited);
   }
 
   SECTION("third field") {
-    instance.get<abc_fields::c>() = 2;
+    using namespace abc_fields;
+    instance.get<c>() = 2;
 
     bool c_was_visited = false;
     instance.visit(
-      [](abc_fields::a, float) {}
-    , [](abc_fields::b, uint32_t) {}
-    , [&](abc_fields::c, uint8_t val) {
+      [](a, float) {}
+    , [](b, uint32_t) {}
+    , [&](c, uint8_t val) {
         c_was_visited = true;
         REQUIRE(val == 2);
       }
@@ -63,27 +66,29 @@ TEST_CASE("all fields can be set", "[oneof]") {
 }
 
 TEST_CASE("visitation lambda order does not matter", "[oneof]") {
+  using namespace abc_fields;
+
   abc instance{};
-  instance.get<abc_fields::a>() = 4.5;
+  instance.get<a>() = 4.5;
 
   SECTION("visitors are passed in the same order as the fields") {
     bool a_was_visited = false;
     instance.visit(
-      [&](abc_fields::a, float val) {
+      [&](a, float val) {
         a_was_visited = true;
         REQUIRE(val == Approx(4.5));
       }
-    , [](abc_fields::b, uint32_t) {}
-    , [](abc_fields::c, uint8_t) {}
+    , [](b, uint32_t) {}
+    , [](c, uint8_t) {}
     );
     REQUIRE(a_was_visited);
   }
   SECTION("visitors are passed in a different order than the fields") {
     bool a_was_visited = false;
     instance.visit(
-      [](abc_fields::b, uint32_t) {}
-    , [](abc_fields::c, uint8_t) {}
-    , [&](abc_fields::a, float val) {
+      [](b, uint32_t) {}
+    , [](c, uint8_t) {}
+    , [&](a, float val) {
         a_was_visited = true;
         REQUIRE(val == Approx(4.5));
       }
@@ -93,16 +98,17 @@ TEST_CASE("visitation lambda order does not matter", "[oneof]") {
 }
 
 SCENARIO("value/zero-initialized oneof has a sensible default", "[oneof]") {
+  using namespace abc_fields;
   abc instance{};
 
   bool a_was_visited = false;
   instance.visit(
-    [&](abc_fields::a, float val) {
+    [&](a, float val) {
       a_was_visited = true;
       REQUIRE(val == Approx(0));
     }
-  , [](abc_fields::b, uint32_t) {}
-  , [](abc_fields::c, uint8_t) {}
+  , [](b, uint32_t) {}
+  , [](c, uint8_t) {}
   );
   REQUIRE(a_was_visited);
 }
@@ -121,58 +127,60 @@ using abcd = nocopy::oneof8<
 >;
 
 SCENARIO("can contain the same type more than once", "[oneof]") {
+  using namespace abcd_fields;
   abcd instance{};
   SECTION("first repeated type") {
-    instance.get<abcd_fields::b>() = 8;
+    instance.get<b>() = 8;
 
     bool b_was_visited = false;
     instance.visit(
-      [&](abcd_fields::b, uint32_t val) {
+      [&](b, uint32_t val) {
         b_was_visited = true;
         REQUIRE(val == 8);
       }
-    , [](abcd_fields::c, uint8_t) {}
-    , [&](abcd_fields::d, uint32_t) {
+    , [](c, uint8_t) {}
+    , [&](d, uint32_t) {
         b_was_visited = false;
       }
-    , [](abcd_fields::a, float) {}
+    , [](a, float) {}
     );
     REQUIRE(b_was_visited);
   }
 
   SECTION("second repeated type") {
-    instance.get<abcd_fields::d>() = 13;
+    instance.get<d>() = 13;
 
     bool d_was_visited = false;
     instance.visit(
-      [&](abcd_fields::b, uint32_t) {
+      [&](b, uint32_t) {
         d_was_visited = false;
       }
-    , [](abcd_fields::c, uint8_t) {}
-    , [&](abcd_fields::d, uint32_t val) {
+    , [](c, uint8_t) {}
+    , [&](d, uint32_t val) {
         d_was_visited = true;
         REQUIRE(val == 13);
       }
-    , [](abcd_fields::a, float) {}
+    , [](a, float) {}
     );
     REQUIRE(d_was_visited);
   }
 }
 
 SCENARIO("reassignment changes the visited type", "[oneof]") {
+  using namespace abcd_fields;
   abcd instance{};
 
-  instance.get<abcd_fields::b>() = 8;
-  instance.get<abcd_fields::a>() = 3.14f;
+  instance.get<b>() = 8;
+  instance.get<a>() = 3.14f;
 
   bool a_was_visited = false;
   instance.visit(
-    [&](abcd_fields::b, uint32_t) {
+    [&](b, uint32_t) {
       a_was_visited = false;
     }
-  , [](abcd_fields::c, uint8_t) {}
-  , [](abcd_fields::d, uint32_t) {}
-  , [&](abcd_fields::a, float val) {
+  , [](c, uint8_t) {}
+  , [](d, uint32_t) {}
+  , [&](a, float val) {
       a_was_visited = true;
       REQUIRE(val == Approx(3.14));
     }
