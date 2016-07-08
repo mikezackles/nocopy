@@ -57,7 +57,7 @@ namespace nocopy {
       detail::dispatcher<packed::num_types() - 1, packed>::dispatch(
         get_tag()
       , [this, callback = detail::lambda_overload<Lambdas...>{std::move(lambdas)...}] (auto t) {
-          callback(typename decltype(t)::original_type{}, get_payload<decltype(t)>());
+          callback(typename decltype(t)::original_type{}, this->get_payload<decltype(t)>());
         }
       );
     }
