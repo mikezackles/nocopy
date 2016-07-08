@@ -32,8 +32,8 @@ namespace nocopy { namespace detail {
     static constexpr auto max_offset = std::numeric_limits<std::size_t>::max();
     struct offset_fold_impl {
       template <typename Pair, typename T>
-      constexpr auto operator()(Pair&& pair, T) {
-        auto tup = hana::first(pair);
+      constexpr auto operator()(Pair&& pair, T) const {
+        auto& tup = hana::first(pair);
         auto last_offset = hana::second(pair);
         if (max_offset - last_offset >= T::type::size) {
           auto next_offset = last_offset + T::type::size;

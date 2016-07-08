@@ -134,6 +134,7 @@ namespace nocopy {
 
     template <typename Field>
     struct field_traits {
+      using original_type = Field;
       using field_type = typename Field::field_type;
       using base_type = find_base_t<field_type>;
       using _ = check_whitelist<base_type>;

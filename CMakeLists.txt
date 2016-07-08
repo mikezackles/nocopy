@@ -27,7 +27,8 @@ target_use_modern_cxx(nocopy TYPE INTERFACE)
 add_executable(tests
   "test/main.cpp"
   "test/archive.cpp"
-  "test/datapack.cpp")
+  "test/datapack.cpp"
+  "test/oneof.cpp")
 
 target_include_directories(tests
   PRIVATE

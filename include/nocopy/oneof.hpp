@@ -4,59 +4,102 @@
 #include <nocopy/fwd/box.hpp>
 #include <nocopy/fwd/oneof.hpp>
 
-#include <nocopy/detail/align_to.hpp>
+#include <nocopy/detail/traits.hpp>
+#include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/oneof_packer.hpp>
 
+#include <cassert>
+#include <utility>
 #include <type_traits>
 
 namespace nocopy {
+  namespace detail {
+    template <std::size_t Index, typename Packed>
+    struct dispatcher {
+      template <typename Callback>
+      static void dispatch(std::size_t i, Callback callback) {
+        if (Index == i) {
+          constexpr auto t = Packed::template lookup_trait<Index>();
+          callback(t);
+        } else {
+          dispatcher<Index - 1, Packed>::dispatch(i, std::move(callback));
+        }
+      }
+    };
+
+    template <typename Packed>
+    struct dispatcher<0, Packed> {
+      template <typename Callback>
+      static void dispatch(std::size_t i, Callback callback) {
+        if (0 == i) {
+          constexpr auto t = Packed::template lookup_trait<0>();
+          callback(t);
+        } else {
+          assert(false);
+        }
+      }
+    };
+  }
+
   template <typename Tag, typename ...Ts>
   class oneof final {
     static_assert(std::is_unsigned<Tag>::value, "tag type for oneof must be unsigned");
 
-    using packed = detail::oneof_packer<Tag, Ts...>;
+    using packed = detail::oneof_packer<Tag, detail::field_traits<Ts>...>;
   public:
     static constexpr auto alignment() { return packed::alignment(); }
     static constexpr auto size() { return packed::size(); }
 
     // Note that if we've value or zero-initialized, we default to the first
     // type passed as a template argument
-    template <typename Visitor>
-    void visit(Visitor&& visitor) const {
-      visitor(get_payload(lookup_type(get_tag())));
+    template <typename ...Lambdas>
+    void visit(Lambdas... lambdas) const {
+      detail::dispatcher<packed::num_types() - 1, packed>::dispatch(
+        get_tag()
+      , [this, callback = detail::lambda_overload<Lambdas...>{std::move(lambdas)...}] (auto t) {
+          callback(typename decltype(t)::original_type{}, get_payload<decltype(t)>());
+        }
+      );
     }
 
     template <typename T>
     auto& get() {
-      static_assert(packed::template is_allowed<T>()
+      static_assert(packed::template is_allowed<detail::field_traits<T>>()
       , "a union cannot contain a type not in the union");
-      set_tag(tag_for_type(hana::type_c<T>));
+      set_tag(packed::template tag_for_type<detail::field_traits<T>>());
+      return get_payload<detail::field_traits<T>>();
     }
   private:
     Tag get_tag() const {
-      return reinterpret_cast<box<Tag> const&>(&buffer_[0]);
+      return reinterpret_cast<detail::boxer_t<Tag> const&>(buffer_[0]);
     }
 
     void set_tag(Tag tag) {
-      reinterpret_cast<box<Tag>&>(&buffer_[0]) = tag;
+      reinterpret_cast<detail::boxer_t<Tag>&>(buffer_[0]) = tag;
     }
 
     template <typename T>
-    auto const& get_payload(T) const {
-      reinterpret_cast<typename T::type::return_type const&>(
+    auto const& get_payload() const {
+      return reinterpret_cast<typename T::return_type const&>(
         buffer_[packed::payload_offset()]
       );
     }
 
     template <typename T>
-    auto& get_payload(T t) {
-      return const_cast<typename T::type::return_type&>(
-        static_cast<oneof const&>(*this).get_payload(t)
+    auto& get_payload() {
+      return const_cast<typename T::return_type&>(
+        static_cast<oneof const&>(*this).get_payload<T>()
       );
     }
 
     alignas(alignment()) std::array<unsigned char, size()> buffer_;
   };
+
+  template <typename ...Ts>
+  using oneof8 = oneof<uint8_t, Ts...>;
+
+  template <typename ...Ts>
+  using oneof16 = oneof<uint16_t, Ts...>;
 }
 
 #endif

@@ -1,15 +1,38 @@
 #ifndef UUID_1CAA534B_0EB4_489D_8FA7_D5343EB58DD5
 #define UUID_1CAA534B_0EB4_489D_8FA7_D5343EB58DD5
 
+#include <nocopy/detail/align_to.hpp>
+
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <boost/hana/at.hpp>
+#include <boost/hana/maximum.hpp>
+#include <boost/hana/size.hpp>
 #include <boost/hana/tuple.hpp>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
 namespace nocopy { namespace detail {
   template <typename Tag, typename ...Ts>
   class oneof_packer {
-    static constexpr auto allowed_types = hana::make_tuple(hana::type_c<detail::field_traits<Ts>>...);
+    static constexpr auto allowed_types() {
+      return hana::make_tuple(hana::type_c<Ts>...);
+    }
+
+    struct lookup_fold {
+      template <typename Pair, typename T>
+      constexpr auto operator()(Pair&& pair, T t) const {
+        auto& map = hana::first(pair);
+        auto index = hana::second(pair);
+        return hana::make_pair(hana::insert(map, hana::make_pair(t, index)), index + 1);
+      }
+    };
+    static constexpr auto index_lookup() {
+      return hana::first(hana::fold_left(
+        allowed_types()
+      , hana::make_pair(hana::make_map(), std::size_t{0})
+      , lookup_fold{}
+      ));
+    }
 
     struct alignment_ordering {
       template <typename X, typename Y>
@@ -18,26 +41,41 @@ namespace nocopy { namespace detail {
         return hana::bool_c<result>;
       }
     };
-    static constexpr auto payload_alignment = hana::maximum(allowed_types, alignment_ordering{});
-
-    static constexpr auto payload_offset() { return align_to(sizeof(Tag), payload_alignment()); }
+    static constexpr auto payload_alignment() {
+      constexpr auto biggest = hana::maximum(allowed_types(), alignment_ordering{});
+      return decltype(biggest)::type::alignment;
+    }
 
   public:
     template <typename T>
     static constexpr bool is_allowed() {
-      return hana::contains(allowed_types, hana::type_c<T>);
+      return hana::contains(allowed_types(), hana::type_c<T>);
     }
 
-    static constexpr auto lookup_type(Tag offset) {
-      return hana::at(allowed_types, offset);
+    static constexpr std::size_t num_types() {
+      return hana::size(allowed_types());
+    }
+
+    template <typename T>
+    static constexpr auto tag_for_type() {
+      return index_lookup()[hana::type_c<T>];
+    }
+
+    template <std::size_t Index>
+    static constexpr auto lookup_trait() {
+      return typename decltype(+hana::at_c<Index>(allowed_types()))::type{};
+    }
+
+    static constexpr auto payload_offset() {
+      return align_to(sizeof(Tag), payload_alignment());
     }
 
     static constexpr auto alignment() {
-      return std::max(payload_alignment, sizeof(Tag));
+      return std::max(payload_alignment(), sizeof(Tag));
     }
 
     static constexpr auto size() {
-      return align_to(payload_offset() + payload_alignment, alignment());
+      return align_to(payload_offset() + payload_alignment(), alignment());
     }
   };
 }}
