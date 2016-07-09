@@ -3,6 +3,7 @@ project(nocopy VERSION 0.1 LANGUAGES CXX)
 
 include("${CMAKE_SOURCE_DIR}/cmake/target_all_warnings_except.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/target_use_modern_cxx.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/default_build_type.cmake")
 
 set(HANA_LOCATION "${CMAKE_SOURCE_DIR}/bundle/hana" CACHE PATH
   "the location of the hana library")
@@ -10,6 +11,8 @@ set(OPTIONAL_LOCATION "${CMAKE_SOURCE_DIR}/bundle/optional" CACHE PATH
   "the location of the std::experimental::optional implementation")
 
 set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
+
+default_build_type(Release)
 
 add_library(nocopy INTERFACE)
 target_compile_definitions(nocopy
