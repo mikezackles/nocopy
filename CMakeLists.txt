@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(nocopy VERSION 0.1 LANGUAGES CXX)
 
+include("${CMAKE_SOURCE_DIR}/cmake/target_add_sanitizers.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/target_all_warnings_except.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/target_use_modern_cxx.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/default_build_type.cmake")
@@ -39,15 +40,15 @@ target_include_directories(tests
 
 target_all_warnings_except(tests
   CLANG
-  # clang warnings
   -Wno-c++98-compat
   -Wno-c++98-compat-pedantic
   GCC
-  # gcc warnings
   -Wno-unknown-pragmas # catch
   )
 
-target_link_libraries(tests nocopy)
+target_add_sanitizers(tests)
+
+target_link_libraries(tests PRIVATE nocopy)
 
 enable_testing()
 add_test(tests tests)
