@@ -4,9 +4,6 @@
 [submodule "cmake"]
 	path = cmake
 	url = git://github.com/mikezackles/cmake_tools
-[submodule "bundle/optional"]
-	path = bundle/optional
-	url = git://github.com/akrzemi1/Optional
 [submodule "bundle/hana"]
 	path = bundle/hana
 	url = git://github.com/boostorg/hana
