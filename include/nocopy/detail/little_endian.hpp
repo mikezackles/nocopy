@@ -16,8 +16,7 @@ namespace nocopy { namespace detail {
 
   template <typename Scalar, typename = hana::when<true>>
   struct little_endian {
-    static_assert(sizeof(Scalar) > 0 && optimize_little_endian(), "endian SFINAE failed sanity check");
-    static_assert(CHAR_BIT == 8, "endian conversions assume an 8-bit byte");
+    static_assert(sizeof(Scalar) > 0 && optimize_little_endian(), "little-endian optimized code instantiated without being requested");
     static_assert(1 < sizeof(Scalar) && sizeof(Scalar) <= 8
     , "byte swap not supported for this scalar");
 
@@ -32,78 +31,39 @@ namespace nocopy { namespace detail {
     }
   };
 
-  template <typename Scalar>
-  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 2 && !optimize_little_endian()>> {
-    using byte_array = std::array<unsigned char, 2>;
+  template <typename Scalar, std::size_t Index>
+  struct converter {
+    using byte_array = std::array<unsigned char, sizeof(Scalar)>;
+    static_assert(Index < sizeof(Scalar), "");
     static Scalar load(byte_array const& source) {
-      return
-          (Scalar{source[0]} << 0)
-        | (Scalar{source[1]} << 8);
+      return (Scalar{source[Index]} << (CHAR_BIT * Index)) | converter<Scalar, Index - 1>::load(source);
     }
     static void store(Scalar source, byte_array& target) {
-      Scalar tmp;
-      tmp = source >> 0;
-      target[0] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 8;
-      target[1] = reinterpret_cast<unsigned char&>(tmp);
+      Scalar tmp = source >> (CHAR_BIT * Index);
+      target[Index] = reinterpret_cast<unsigned char&>(tmp);
+      converter<Scalar, Index - 1>::store(source, target);
     }
   };
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 4 && !std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
-    using byte_array = std::array<unsigned char, 4>;
+  struct converter<Scalar, 0> {
+    using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
-      return
-          (Scalar{source[0]} << 0)
-        | (Scalar{source[1]} << 8)
-        | (Scalar{source[2]} << 16)
-        | (Scalar{source[3]} << 24);
+      return source[0];
     }
     static void store(Scalar source, byte_array& target) {
-      Scalar tmp;
-      tmp = source >> 0;
-      target[0] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 8;
-      target[1] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 16;
-      target[2] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 24;
-      target[3] = reinterpret_cast<unsigned char&>(tmp);
+      target[0] = reinterpret_cast<unsigned char&>(source);
     }
   };
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 8 && !std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
-    using byte_array = std::array<unsigned char, 8>;
+  struct little_endian<Scalar, hana::when<!std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
+    using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
-      return
-          (Scalar{source[0]} << 0)
-        | (Scalar{source[1]} << 8)
-        | (Scalar{source[2]} << 16)
-        | (Scalar{source[3]} << 24)
-        | (Scalar{source[4]} << 32)
-        | (Scalar{source[5]} << 40)
-        | (Scalar{source[6]} << 48)
-        | (Scalar{source[7]} << 56);
+      return converter<Scalar, sizeof(Scalar) - 1>::load(source);
     }
     static void store(Scalar source, byte_array& target) {
-      Scalar tmp;
-      tmp = source >> 0;
-      target[0] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 8;
-      target[1] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 16;
-      target[2] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 24;
-      target[3] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 32;
-      target[4] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 40;
-      target[5] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 48;
-      target[6] = reinterpret_cast<unsigned char&>(tmp);
-      tmp = source >> 56;
-      target[7] = reinterpret_cast<unsigned char&>(tmp);
+      converter<Scalar, sizeof(Scalar) - 1>::store(source, target);
     }
   };
 
