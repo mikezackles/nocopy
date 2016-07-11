@@ -11,13 +11,15 @@ project(nocopy VERSION 0.1 LANGUAGES CXX)
 
 set(HANA_LOCATION "${CMAKE_SOURCE_DIR}/bundle/hana" CACHE PATH
   "the location of the hana library")
+set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
 
 set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
 
 add_library(nocopy INTERFACE)
 target_compile_definitions(nocopy
   INTERFACE
-  ASIO_STANDALONE)
+  ASIO_STANDALONE
+  $<$<BOOL:${OPTIMIZE_LITTLE_ENDIAN}>:NOCOPY_OPTIMIZE_LITTLE_ENDIAN>)
 target_include_directories(nocopy
   INTERFACE
   "include"

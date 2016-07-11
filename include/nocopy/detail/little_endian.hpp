@@ -6,17 +6,34 @@
 #include <type_traits>
 
 namespace nocopy { namespace detail {
+  constexpr bool optimize_little_endian() {
+  #ifdef NOCOPY_OPTIMIZE_LITTLE_ENDIAN
+    return true;
+  #else
+    return false;
+  #endif
+  }
+
   template <typename Scalar, typename = hana::when<true>>
   struct little_endian {
+    static_assert(sizeof(Scalar) > 0 && optimize_little_endian(), "endian SFINAE failed sanity check");
     static_assert(CHAR_BIT == 8, "endian conversions assume an 8-bit byte");
     static_assert(1 < sizeof(Scalar) && sizeof(Scalar) <= 8
     , "byte swap not supported for this scalar");
+
+    using byte_array = std::array<unsigned char, sizeof(Scalar)>;
+    static Scalar load(byte_array const& source) {
+      Scalar result;
+      std::memcpy(&result, &source[0], sizeof(Scalar));
+      return result;
+    }
+    static void store(Scalar source, byte_array& target) {
+      std::memcpy(&target[0], &source, sizeof(Scalar));
+    }
   };
 
-  // The goal here is to keep the code simple and standards compliant for now,
-  // hoping that compilers will be smart enough to optimize.
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 2>> {
+  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 2 && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, 2>;
     static Scalar load(byte_array const& source) {
       return
@@ -33,7 +50,7 @@ namespace nocopy { namespace detail {
   };
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 4 && !std::is_floating_point<Scalar>::value>> {
+  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 4 && !std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, 4>;
     static Scalar load(byte_array const& source) {
       return
@@ -56,7 +73,7 @@ namespace nocopy { namespace detail {
   };
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 8 && !std::is_floating_point<Scalar>::value>> {
+  struct little_endian<Scalar, hana::when<sizeof(Scalar) == 8 && !std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, 8>;
     static Scalar load(byte_array const& source) {
       return
@@ -100,7 +117,7 @@ namespace nocopy { namespace detail {
   template <std::size_t Size> using get_proxy_t = typename get_proxy<Size>::type;
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<std::is_floating_point<Scalar>::value>> {
+  struct little_endian<Scalar, hana::when<std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     using proxy_type = get_proxy_t<sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
