@@ -96,9 +96,9 @@ namespace nocopy {
     };
 
     template <typename BaseType>
-    struct check_whitelist {
+    constexpr bool is_valid_base_type() {
       static_assert(CHAR_BIT == 8, "8-bit byte required");
-      static_assert(
+      return
            is_datapack<BaseType>::value
         || (std::is_same<BaseType, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) == 4)
         || (std::is_same<BaseType, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) == 8)
@@ -128,16 +128,20 @@ namespace nocopy {
       #ifdef UINT64_MAX
         || std::is_same<BaseType, uint64_t>::value
       #endif
-      , "unsupported field type"
-      );
-    };
+      ;
+    }
+
+    template <typename T>
+    constexpr bool is_valid() {
+      return is_valid_base_type<find_base_t<T>>();
+    }
 
     template <typename Field>
     struct field_traits {
       using original_type = Field;
       using field_type = typename Field::field_type;
       using base_type = find_base_t<field_type>;
-      using _ = check_whitelist<base_type>;
+      static_assert(is_valid_base_type<base_type>(), "unsupported field type");
       using return_type = find_return_type_t<field_type>;
       static constexpr auto alignment = alignment_for<base_type>::result;
       static constexpr auto size = sizeof(return_type);
