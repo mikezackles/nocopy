@@ -97,11 +97,10 @@ namespace nocopy {
 
     template <typename BaseType>
     constexpr bool is_valid_base_type() {
-      static_assert(CHAR_BIT == 8, "8-bit byte required");
       return
            is_datapack<BaseType>::value
-        || (std::is_same<BaseType, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) == 4)
-        || (std::is_same<BaseType, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) == 8)
+        || (std::is_same<BaseType, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) * CHAR_BIT == 32)
+        || (std::is_same<BaseType, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) * CHAR_BIT == 64)
         || std::is_same<BaseType, char>::value
         || std::is_same<BaseType, unsigned char>::value
       #ifdef INT8_MAX

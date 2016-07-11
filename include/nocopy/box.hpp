@@ -3,6 +3,7 @@
 
 #include <nocopy/fwd/box.hpp>
 
+#include <climits>
 #include <cstring>
 #include <type_traits>
 
@@ -10,6 +11,7 @@ namespace nocopy {
   namespace detail {
     template <typename Scalar, typename = hana::when<true>>
     struct little_endian {
+      static_assert(CHAR_BIT == 8, "endian conversions assume an 8-bit byte");
       static_assert(1 < sizeof(Scalar) && sizeof(Scalar) <= 8
       , "byte swap not supported for this scalar");
     };
