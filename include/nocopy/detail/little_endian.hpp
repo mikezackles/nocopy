@@ -16,9 +16,7 @@ namespace nocopy { namespace detail {
 
   template <typename Scalar, typename = hana::when<true>>
   struct little_endian {
-    static_assert(sizeof(Scalar) > 0 && optimize_little_endian(), "little-endian optimized code instantiated without being requested");
-    static_assert(1 < sizeof(Scalar) && sizeof(Scalar) <= 8
-    , "byte swap not supported for this scalar");
+    static_assert(sizeof(Scalar) > 1 && optimize_little_endian(), "little-endian optimized code instantiated erroneously");
 
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
