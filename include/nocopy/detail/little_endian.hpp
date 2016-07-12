@@ -55,13 +55,16 @@ namespace nocopy { namespace detail {
   };
 
   template <typename Scalar>
+  using converter_t = converter<Scalar, sizeof(Scalar) - 1>;
+
+  template <typename Scalar>
   struct little_endian<Scalar, hana::when<!std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
-      return converter<Scalar, sizeof(Scalar) - 1>::load(source);
+      return converter_t<Scalar>::load(source);
     }
     static void store(Scalar source, byte_array& target) {
-      converter<Scalar, sizeof(Scalar) - 1>::store(source, target);
+      converter_t<Scalar>::store(source, target);
     }
   };
 
