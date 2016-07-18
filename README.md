@@ -23,3 +23,8 @@ aliasing errors. Specifically, `reinterpret_cast` is only used to convert
 references to unsigned char to references to POD types whose sole data member is
 `std::array<unsigned char, N>`. It is also used to cast scalar types to unsigned
 char during endian conversion.
+
+TODO
+-
+
+* Callbacks are expected to be passed by value.

@@ -130,11 +130,6 @@ namespace nocopy {
       ;
     }
 
-    template <typename T>
-    constexpr bool is_valid() {
-      return is_valid_base_type<find_base_t<T>>();
-    }
-
     template <typename Field>
     struct field_traits {
       using original_type = Field;

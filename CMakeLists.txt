@@ -32,7 +32,8 @@ add_executable(tests
   "test/main.cpp"
   "test/archive.cpp"
   "test/datapack.cpp"
-  "test/oneof.cpp")
+  "test/oneof.cpp"
+  "test/heap.cpp")
 
 target_include_directories(tests
   PRIVATE
@@ -42,6 +43,8 @@ target_all_warnings_except(tests
   CLANG
   -Wno-c++98-compat
   -Wno-c++98-compat-pedantic
+  -Wno-weak-vtables # AFAIK there's not much to do about this one while remaining header-only
+  -Wno-padded
   GCC
   -Wno-unknown-pragmas # catch
   )

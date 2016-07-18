@@ -5,6 +5,10 @@ namespace nocopy { namespace detail {
   constexpr auto align_to(std::size_t offset, std::size_t alignment) {
     return offset + (((~offset) + 1) & (alignment - 1));
   }
+
+  constexpr auto align_backward(std::size_t offset, std::size_t alignment) {
+    return offset - (offset & (alignment - 1));
+  }
 }}
 
 #endif

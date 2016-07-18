@@ -11,6 +11,18 @@ namespace nocopy {
   class box {
     static_assert(std::is_scalar<Scalar>::value, "boxes are for scalar types");
   public:
+    template <typename T>
+    auto operator|=(T scalar) -> box<decltype(Scalar() | scalar)>& {
+      Scalar val = *this;
+      *this = val | scalar;
+      return *this;
+    }
+    template <typename T>
+    auto operator&=(T scalar) -> box<decltype(Scalar() & scalar)>& {
+      Scalar val = *this;
+      *this = val & scalar;
+      return *this;
+    }
     box& operator=(Scalar scalar) {
       detail::little_endian<Scalar>::store(scalar, buffer_);
       return *this;
