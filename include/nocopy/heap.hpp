@@ -3,6 +3,7 @@
 
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
+#include <nocopy/detail/narrow_cast.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/box.hpp>
 #include <nocopy/datapack.hpp>
@@ -14,22 +15,6 @@
 #include <type_traits>
 
 namespace nocopy {
-  namespace detail {
-    template <typename To, typename From>
-    constexpr std::enable_if_t<(sizeof(From) > sizeof(To)) && std::is_integral<To>::value && std::is_integral<From>::value, To>
-    narrow_cast(From from) {
-      return static_cast<To>(
-        static_cast<std::make_unsigned_t<From>>(from) & (static_cast<std::make_unsigned_t<To>>(-1))
-      );
-    }
-
-    template <typename To, typename From>
-    constexpr std::enable_if_t<sizeof(From) == sizeof(To) && std::is_integral<To>::value && std::is_integral<From>::value, To>
-    narrow_cast(From from) {
-      return from;
-    }
-  }
-
   template <typename Offset, typename AlignmentType, bool AssumeSameSizedByte>
   class heap final {
     static constexpr auto alignment = sizeof(AlignmentType);
