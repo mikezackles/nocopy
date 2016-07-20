@@ -33,7 +33,7 @@ add_executable(tests
   "test/archive.cpp"
   "test/datapack.cpp"
   "test/oneof.cpp"
-  "test/heap.cpp")
+  "test/raw_heap.cpp")
 
 target_include_directories(tests
   PRIVATE

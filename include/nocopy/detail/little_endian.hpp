@@ -69,12 +69,12 @@ namespace nocopy { namespace detail {
   };
 
   template <std::size_t Size> struct get_proxy;
-  #ifdef UINT32_MAX
-    template <> struct get_proxy<4> { using type = uint32_t; };
-  #endif
-  #ifdef UINT64_MAX
-    template <> struct get_proxy<8> { using type = uint64_t; };
-  #endif
+#ifdef UINT32_MAX
+  template <> struct get_proxy<4> { using type = uint32_t; };
+#endif
+#ifdef UINT64_MAX
+  template <> struct get_proxy<8> { using type = uint64_t; };
+#endif
   template <std::size_t Size> using get_proxy_t = typename get_proxy<Size>::type;
 
   template <typename Scalar>

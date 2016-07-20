@@ -14,9 +14,9 @@
 #include <tuple>
 #include <type_traits>
 
-namespace nocopy {
+namespace nocopy { namespace detail {
   template <typename Offset, typename AlignmentType, bool AssumeSameSizedByte>
-  class heap final {
+  class raw_heap final {
     static constexpr auto alignment = sizeof(AlignmentType);
     static constexpr std::size_t byte_multiplier = AssumeSameSizedByte ? 1 : CHAR_BIT;
 
@@ -77,7 +77,7 @@ namespace nocopy {
       assert(0 < offset && offset < size_);
       return reinterpret_cast<T const&>(buffer_[offset]);
     }
-    template <typename T> T& deref(Offset offset) noexcept { return const_cast<T&>(static_cast<heap const&>(*this).deref(offset)); }
+    template <typename T> T& deref(Offset offset) noexcept { return const_cast<T&>(static_cast<raw_heap const&>(*this).deref(offset)); }
 
     template <typename ...Callbacks>
     void malloc(std::size_t requested_size, Callbacks... callbacks) noexcept {
@@ -183,12 +183,12 @@ namespace nocopy {
     block_header_t const& list_head() const {
       return get_header(list_head_offset);
     }
-    block_header_t& list_head() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).list_head()); }
+    block_header_t& list_head() { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).list_head()); }
 
     block_header_t const& first_block() const {
       return get_header(first_block_offset);
     }
-    block_header_t& first_block() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).first_block()); }
+    block_header_t& first_block() { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).first_block()); }
 
     // LIFO
     void add_to_free_list(block_header_t& block) {
@@ -268,24 +268,24 @@ namespace nocopy {
     block_header_t const& next_free(block_header_t const& block) const {
       return get_header(block.template get<typename block_header::next_free>());
     }
-    block_header_t& next_free(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_free(block)); }
+    block_header_t& next_free(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).next_free(block)); }
 
     block_header_t const& prev_free(block_header_t const& block) const {
       return get_header(block.template get<typename block_header::prev_free>());
     }
-    block_header_t& prev_free(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_free(block)); }
+    block_header_t& prev_free(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).prev_free(block)); }
 
     block_header_t const& next_adjacent(block_header_t const& block) const {
       Offset size; bool is_free;
       std::tie(size, is_free) = get_block_size(block);
       return get_header(get_offset(block) + block_header_size + size);
     }
-    block_header_t& next_adjacent(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_adjacent(block)); }
+    block_header_t& next_adjacent(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).next_adjacent(block)); }
 
     block_header_t const& prev_adjacent(block_header_t const& block) const {
       return get_header(block.template get<typename block_header::prev>());
     }
-    block_header_t& prev_adjacent(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_adjacent(block)); }
+    block_header_t& prev_adjacent(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).prev_adjacent(block)); }
 
     static std::tuple<Offset, bool> get_block_size(block_header_t const& block) {
       Offset s = block.template get<typename block_header::size>();
@@ -309,7 +309,7 @@ namespace nocopy {
     block_header_t const& sentinel() const {
       return get_header(sentinel_offset());
     }
-    block_header_t& sentinel() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).sentinel()); }
+    block_header_t& sentinel() { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).sentinel()); }
 
     Offset get_offset(block_header_t const& block) const {
       auto ptrdiff = reinterpret_cast<unsigned char const*>(&block) - &buffer_[0];
@@ -319,7 +319,7 @@ namespace nocopy {
     block_header_t const& get_header(Offset offset) const {
       return reinterpret_cast<block_header_t&>(buffer_[offset / byte_multiplier]);
     }
-    block_header_t& get_header(Offset offset) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).get_header(offset)); }
+    block_header_t& get_header(Offset offset) { return const_cast<block_header_t&>(static_cast<raw_heap const&>(*this).get_header(offset)); }
 
     // Size is either in bytes or bits depending on AssumeSameSizedByte
     template <typename ...Callbacks>
@@ -331,25 +331,26 @@ namespace nocopy {
       } else if (!is_heap_big_enough(aligned_size) || is_heap_too_big(aligned_size)) {
         callback(make_error_code(error::bad_heap_size));
       } else {
-        heap result{buffer, aligned_size};
+        raw_heap result{buffer, aligned_size};
         if (do_init) result.init();
         callback(result);
       };
     }
 
-    heap(unsigned char* buffer, Offset size) : buffer_{buffer}, size_{size} {}
+    raw_heap(unsigned char* buffer, Offset size) : buffer_{buffer}, size_{size} {}
 
     unsigned char* buffer_;
     Offset size_;
   };
+}
 
 #ifdef UINT32_MAX
-  using heap32 = heap<uint32_t, uint32_t, true>; // assumes CHAR_BIT == 8 (has larger capacity)
-  using pedantic_heap32 = heap<uint32_t, uint32_t, false>; // supports CHAR_BIT != 8 (smaller capacity)
+  using heap32 = detail::raw_heap<uint32_t, uint32_t, true>; // assumes CHAR_BIT == 8 (has larger capacity)
+  using pedantic_heap32 = detail::raw_heap<uint32_t, uint32_t, false>; // supports CHAR_BIT != 8 (smaller capacity)
 #endif
 #ifdef UINT64_MAX
-  using heap64 = heap<uint64_t, uint64_t, true>; // assumes CHAR_BIT == 8 (has larger capacity)
-  using pedantic_heap64 = heap<uint64_t, uint64_t, false>; // supports CHAR_BIT != 8 (smaller capacity)
+  using heap64 = detail::raw_heap<uint64_t, uint64_t, true>; // assumes CHAR_BIT == 8 (has larger capacity)
+  using pedantic_heap64 = detail::raw_heap<uint64_t, uint64_t, false>; // supports CHAR_BIT != 8 (smaller capacity)
 #endif
 }
 

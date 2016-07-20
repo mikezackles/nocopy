@@ -1,7 +1,7 @@
 #include <catch.hpp>
 
 #include <iostream>
-#include <nocopy/heap.hpp>
+#include <nocopy/detail/raw_heap.hpp>
 
 #include <chrono>
 #include <iterator>
@@ -12,7 +12,7 @@ constexpr unsigned long long operator "" _KB(unsigned long long val) {
   return val << 10;
 }
 
-TEST_CASE("heap corruption", "[heap]") {
+TEST_CASE("raw heap corruption", "[heap]") {
   using offset_t = nocopy::heap32::offset_t;
   std::array<unsigned char, 100_KB> buffer;
 
