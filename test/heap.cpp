@@ -1,7 +1,7 @@
 #include <catch.hpp>
 
 #include <iostream>
-#include <nocopy/detail/raw_heap.hpp>
+#include <nocopy/heap.hpp>
 
 #include <chrono>
 #include <iterator>
