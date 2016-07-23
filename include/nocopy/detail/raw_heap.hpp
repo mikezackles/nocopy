@@ -43,21 +43,6 @@ namespace nocopy { namespace detail {
   public:
     using offset_t = Offset; // for client code
 
-    //template <typename T>
-    //class reference final {
-    //  // Note that this will also check T against the whitelist
-    //  static constexpr auto T_alignment = detail::field_traits<T>::alignment;
-    //  static_assert(T_alignment < alignment && alignment % T_alignment == 0
-    //  , "This data is over-aligned for this heap. Use a bigger heap alignment.");
-    //public:
-    //  operator Offset() const { return offset_; }
-
-    //private:
-    //  explicit reference(Offset offset) noexcept : offset_{offset} {}
-
-    //  Offset offset_;
-    //};
-
     template <typename ...Args>
     static void create(Args... args) noexcept {
       create_helper(true, args...);

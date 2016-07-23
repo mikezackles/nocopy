@@ -18,13 +18,11 @@ set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
 add_library(nocopy INTERFACE)
 target_compile_definitions(nocopy
   INTERFACE
-  ASIO_STANDALONE
   $<$<BOOL:${OPTIMIZE_LITTLE_ENDIAN}>:NOCOPY_OPTIMIZE_LITTLE_ENDIAN>)
 target_include_directories(nocopy
   INTERFACE
   "include"
   "${HANA_LOCATION}/include")
-#target_link_libraries(nocopy INTERFACE sodium ${CMAKE_THREAD_LIBS_INIT})
 # TODO - whitelist features here if necessary
 target_use_modern_cxx(nocopy TYPE INTERFACE)
 
