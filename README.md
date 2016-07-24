@@ -6,12 +6,13 @@ Structs (`nocopy::datapack`)
 -
 
 Nocopy datapacks are essentially traditional packed structs, but the packing is
-performed automatically at compile time. In other words, the fields are sorted
-by alignment from largest to smallest, which ensures that if the datapack itself
-is aligned to the alignment of the largest field, all its members are aligned.
-Padding is inserted to align the end of the datapack with the largest alignment
-it contains. This ensures that datapacks can contain other datapacks as nested
-fields without affecting the alignment of subsequent fields.
+performed automatically at compile time. Scalar types are aligned to their size,
+and datapack fields are sorted by alignment from largest to smallest, which
+ensures that if the datapack itself is aligned to the alignment of the largest
+field, all its members are aligned. Padding is inserted to align the end of the
+datapack with the largest alignment it contains. This ensures that datapacks can
+contain other datapacks as nested fields without affecting the alignment of
+subsequent fields.
 
 ```c++
 #include <nocopy.hpp>
