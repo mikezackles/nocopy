@@ -100,7 +100,8 @@ int main() {
 ```
 
 Note that the lambdas passed to `abc_t::visit` can appear in any order, and they
-are always passed by value.
+are always passed by value. This is generally true for lambdas passed as
+callbacks to nocopy.
 
 Archives
 -
