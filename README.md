@@ -2,17 +2,18 @@ This project is still in flux, and although it aims to provide a flexible,
 portable, zero-copy binary encoding without using a standalone schema compiler,
 it may still fall short of that goal. Please report bugs!
 
-Structs (`nocopy::datapack`)
+Structs ([`nocopy::datapack`](test/datapack.cpp))
 -
 
 Nocopy datapacks are essentially traditional packed structs, but the packing is
 performed automatically at compile time. Scalar types are aligned to their size,
-and datapack fields are sorted by alignment from largest to smallest, which
-ensures that if the datapack itself is aligned to the alignment of the largest
-field, all its members are aligned. Padding is inserted to align the end of the
-datapack with the largest alignment it contains. This ensures that datapacks can
-contain other datapacks as nested fields without affecting the alignment of
-subsequent fields.
+and datapack fields are sorted by alignment from largest to smallest. Because
+these alignments are all guaranteed to be powers of two, smaller alignments
+divide larger ones. This ensures that if the datapack itself is aligned to the
+alignment of the largest field, all its members are aligned. Padding is inserted
+to align the end of the datapack with the largest alignment it contains. This
+ensures that datapacks can contain other datapacks as nested fields without
+affecting the alignment of subsequent fields.
 
 ```c++
 #include <nocopy.hpp>
@@ -67,7 +68,7 @@ them, their definitions are as follows:
 Technically, `field_name::name` is currently unused, but it may be used in the
 future for doing things like dumping to JSON.
 
-Unions (`nocopy::oneof`)
+Unions ([`nocopy::oneof`](test/oneof.cpp))
 -
 
 ```c++
@@ -104,7 +105,10 @@ Note that the lambdas passed to `abc_t::visit` can appear in any order, and they
 are always passed by value. This is generally true for lambdas passed as
 callbacks to nocopy.
 
-Archives
+The field type is passed as the first argument to the visitor to allow for
+unions that contain the same type under a different name.
+
+Versioning ([`nocopy::archive_t`](test/archive.cpp))
 -
 
 ```c++
@@ -137,7 +141,7 @@ template <std::size_t Version>
 using measurement_t = typename measurement::type<Version>;
 ```
 
-Heap
+Dynamic Memory ([`nocopy::heap`](test/heap.cpp))
 -
 
 Nocopy includes a very basic heap implementation (not thread safe). So, for
@@ -169,7 +173,8 @@ int main() {
   std::array<unsigned char, 1_KB> buffer;
   nocopy::heap64::create(&buffer[0], sizeof(buffer)
   , [](nocopy::heap64 heap) {
-      heap.malloc(2*sizeof(measurement_t)
+      heap.malloc(
+        2 * sizeof(measurement_t)
       , [heap](nocopy::heap64::offset_t result) mutable {
           auto m = heap.deref<measurement_t>(result);
           m++;
@@ -217,8 +222,9 @@ Nocopy uses `reinterpret_cast`, but special care has been taken to avoid strict
 aliasing errors. Specifically, `reinterpret_cast` is only used to convert
 references to unsigned char to references to POD types whose sole data member is
 `std::array<unsigned char, N>`. It is also used to cast scalar types to unsigned
-char during endian conversion. I am not a language lawyer, so please let me know
-if I've misunderstood something here.
+char during endian conversion. I've done my best to interpret the standard, but
+I am not a language lawyer, so please let me know if I've misunderstood
+something here.
 
 Optimization
 -
@@ -228,9 +234,9 @@ little-endian platforms. AFAIK, there is no reliable way to detect endianness at
 compile time, so by default, nocopy performs conversion on all platforms. Your
 compiler may be smart enough to optimize this away, but if you want to be
 certain that no conversion is performed, simply define
-NOCOPY_OPTIMIZE_LITTLE_ENDIAN (OPTIMIZE_LITTLE_ENDIAN in the cmake cache). Note
-that if you mistakenly compile with this defined on big-endian platforms, the
-serialized data will not be portable. This flag may also be used to turn off
+`NOCOPY_OPTIMIZE_LITTLE_ENDIAN` (`OPTIMIZE_LITTLE_ENDIAN` in the cmake cache).
+Note that if you mistakenly compile with this defined on big-endian platforms,
+the serialized data will not be portable. This flag may also be used to turn off
 conversion regardless of platform if you aren't worried about portability.
 
 For the Future
