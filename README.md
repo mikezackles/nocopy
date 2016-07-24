@@ -167,7 +167,7 @@ int main() {
   std::array<unsigned char, 1_KB> buffer;
   nocopy::heap64::create(&buffer[0], sizeof(buffer)
   , [](nocopy::heap64 heap) {
-      heap.malloc(sizeof(measurement_t) + 1
+      heap.malloc(2*sizeof(measurement_t)
       , [heap](nocopy::heap64::offset_t result) mutable {
           auto m = heap.deref<measurement_t>(result);
           m++;
