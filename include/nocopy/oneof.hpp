@@ -17,12 +17,12 @@ namespace nocopy {
     template <std::size_t Index, typename Packed>
     struct dispatcher {
       template <typename Callback>
-      static void dispatch(std::size_t i, Callback callback) {
+      static auto dispatch(std::size_t i, Callback callback) {
         if (Index == i) {
           constexpr auto t = Packed::template lookup_trait<Index>();
-          callback(t);
+          return callback(t);
         } else {
-          dispatcher<Index - 1, Packed>::dispatch(i, std::move(callback));
+          return dispatcher<Index - 1, Packed>::dispatch(i, std::move(callback));
         }
       }
     };
@@ -30,10 +30,10 @@ namespace nocopy {
     template <typename Packed>
     struct dispatcher<0, Packed> {
       template <typename Callback>
-      static void dispatch(std::size_t i, Callback callback) {
+      static auto dispatch(std::size_t i, Callback callback) {
         if (0 == i) {
           constexpr auto t = Packed::template lookup_trait<0>();
-          callback(t);
+          return callback(t);
         } else {
           assert(false);
         }
@@ -53,11 +53,11 @@ namespace nocopy {
     // Note that if we've value or zero-initialized, we default to the first
     // type passed as a template argument
     template <typename ...Lambdas>
-    void visit(Lambdas... lambdas) const {
-      detail::dispatcher<packed::num_types() - 1, packed>::dispatch(
+    auto visit(Lambdas... lambdas) const {
+      return detail::dispatcher<packed::num_types() - 1, packed>::dispatch(
         get_tag()
       , [this, callback = detail::lambda_overload<Lambdas...>{std::move(lambdas)...}] (auto t) {
-          callback(typename decltype(t)::original_type{}, this->get_payload<decltype(t)>());
+          return callback(typename decltype(t)::original_type{}, this->get_payload<decltype(t)>());
         }
       );
     }

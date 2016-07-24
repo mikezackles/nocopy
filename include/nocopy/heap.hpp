@@ -44,13 +44,13 @@ namespace nocopy { namespace detail {
     using offset_t = Offset; // for client code
 
     template <typename ...Args>
-    static void create(Args... args) noexcept {
-      create_helper(true, args...);
+    static auto create(Args... args) noexcept {
+      return create_helper(true, args...);
     }
 
     template <typename ...Args>
-    static void load(Args... args) noexcept {
-      create_helper(false, args...);
+    static auto load(Args... args) noexcept {
+      return create_helper(false, args...);
     }
 
     template <typename T>
@@ -309,17 +309,17 @@ namespace nocopy { namespace detail {
 
     // Size is either in bytes or bits depending on AssumeSameSizedByte
     template <typename ...Callbacks>
-    static void create_helper(bool do_init, unsigned char* buffer, std::size_t size, Callbacks... callbacks) noexcept {
+    static auto create_helper(bool do_init, unsigned char* buffer, std::size_t size, Callbacks... callbacks) noexcept {
       detail::lambda_overload<Callbacks...> callback{callbacks...};
       auto aligned_size = detail::narrow_cast<Offset>(detail::align_backward(size / byte_multiplier, alignment));
       if (!is_aligned(buffer)) {
-        callback(make_error_code(error::heap_not_aligned));
+        return callback(make_error_code(error::heap_not_aligned));
       } else if (!is_heap_big_enough(aligned_size) || is_heap_too_big(aligned_size)) {
-        callback(make_error_code(error::bad_heap_size));
+        return callback(make_error_code(error::bad_heap_size));
       } else {
         heap result{buffer, aligned_size};
         if (do_init) result.init();
-        callback(result);
+        return callback(result);
       };
     }
 
