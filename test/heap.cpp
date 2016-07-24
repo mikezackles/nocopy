@@ -12,6 +12,35 @@ constexpr unsigned long long operator "" _KB(unsigned long long val) {
   return val << 10;
 }
 
+struct measurement {
+  NOCOPY_FIELD(delta, float);
+  NOCOPY_FIELD(first, uint32_t);
+  NOCOPY_FIELD(second, uint8_t);
+  NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
+  NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
+  NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
+  using type = nocopy::datapack<delta, first, second, coords, locations>;
+};
+using measurement_t = measurement::type;
+
+TEST_CASE("deref", "[heap]") {
+  std::array<unsigned char, 1_KB> buffer;
+  nocopy::heap64::create(&buffer[0], sizeof(buffer)
+  , [](nocopy::heap64 heap) {
+      heap.malloc(sizeof(measurement_t) + 1
+      , [heap](nocopy::heap64::offset_t result) mutable {
+          auto m = heap.deref<measurement_t>(result);
+          m++;
+          m->get<measurement::first>() = 2000;
+          heap.free(result);
+        }
+      , [](std::error_code) { REQUIRE(false); }
+      );
+    }
+  , [](std::error_code) { REQUIRE(false); }
+  );
+}
+
 TEST_CASE("raw heap corruption", "[heap]") {
   using offset_t = nocopy::heap32::offset_t;
   std::array<unsigned char, 100_KB> buffer;

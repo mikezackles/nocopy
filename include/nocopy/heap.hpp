@@ -55,21 +55,22 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     T const* deref(Offset offset) const noexcept {
-      // Note that this will also check that T is an allowed type
-      static constexpr auto T_alignment = detail::field_traits<T>::alignment;
-      static_assert(T_alignment < alignment && alignment % T_alignment == 0
+      using base = detail::find_base_t<T>;
+      static_assert(detail::is_valid_base_type<base>(), "Type not compatible with heap");
+      constexpr auto T_alignment = detail::alignment_for<base>::result;
+      static_assert((T_alignment < alignment) && alignment % T_alignment == 0
                     , "This data is over-aligned for this heap. Use a bigger heap alignment.");
       assert(0 < offset && offset < size_);
       return reinterpret_cast<T const*>(&buffer_[offset]);
     }
-    template <typename T> T* deref(Offset offset) noexcept { return const_cast<T*>(static_cast<heap const&>(*this).deref(offset)); }
+    template <typename T> T* deref(Offset offset) noexcept { return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(offset)); }
 
     template <typename ...Callbacks>
     void malloc(std::size_t requested_size, Callbacks... callbacks) noexcept {
       detail::lambda_overload<Callbacks...> callback{callbacks...};
       Offset target_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(requested_size, alignment));
       assert(target_size < size_);
-      auto found = each_free([=](auto& block) {
+      auto found = each_free([=](auto& block) mutable {
         if (trim(block, target_size)) {
           remove_from_free_list(block);
           mark_as_allocated(block);

@@ -2,11 +2,6 @@ This project is still in flux, and although it aims to provide a flexible,
 portable, zero-copy binary encoding without using a standalone schema compiler,
 it may still fall short of that goal. Please report bugs!
 
-Note that nocopy is currently targeted exclusively at C++14 and above. While
-multi-language compatibility may technically be possible, nocopy is designed to
-target the compile-time strengths of C++, and as such, support for other
-languages is out of scope.
-
 Structs (`nocopy::datapack`)
 -
 
