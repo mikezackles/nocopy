@@ -15,6 +15,11 @@ namespace nocopy { namespace detail {
     using Lambda::operator();
     lambda_overload(Lambda lambda) : Lambda{std::move(lambda)} {}
   };
+
+  template <typename ...Lambdas>
+  auto make_overload(Lambdas... lambdas) {
+    return lambda_overload<Lambdas...>{std::move(lambdas)...};
+  }
 }}
 
 #endif

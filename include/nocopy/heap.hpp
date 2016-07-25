@@ -58,8 +58,9 @@ namespace nocopy { namespace detail {
       using base = detail::find_base_t<T>;
       static_assert(detail::is_valid_base_type<base>(), "Type not compatible with heap");
       constexpr auto T_alignment = detail::alignment_for<base>::result;
-      static_assert((T_alignment < alignment) && alignment % T_alignment == 0
-                    , "This data is over-aligned for this heap. Use a bigger heap alignment.");
+      static_assert(
+        (T_alignment < alignment) && alignment % T_alignment == 0
+      , "This data is over-aligned for this heap. Use a bigger heap alignment.");
       assert(0 < offset && offset < size_);
       return reinterpret_cast<T const*>(&buffer_[offset]);
     }
@@ -67,7 +68,7 @@ namespace nocopy { namespace detail {
 
     template <typename ...Callbacks>
     void malloc(std::size_t requested_size, Callbacks... callbacks) noexcept {
-      detail::lambda_overload<Callbacks...> callback{callbacks...};
+      auto callback = detail::make_overload(std::move(callbacks)...);
       Offset target_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(requested_size, alignment));
       assert(target_size < size_);
       auto found = each_free([=](auto& block) mutable {
@@ -310,7 +311,7 @@ namespace nocopy { namespace detail {
     // Size is either in bytes or bits depending on AssumeSameSizedByte
     template <typename ...Callbacks>
     static auto create_helper(bool do_init, unsigned char* buffer, std::size_t size, Callbacks... callbacks) noexcept {
-      detail::lambda_overload<Callbacks...> callback{callbacks...};
+      auto callback = detail::make_overload(std::move(callbacks)...);
       auto aligned_size = detail::narrow_cast<Offset>(detail::align_backward(size / byte_multiplier, alignment));
       if (!is_aligned(buffer)) {
         return callback(make_error_code(error::heap_not_aligned));

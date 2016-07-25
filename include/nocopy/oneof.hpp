@@ -56,7 +56,7 @@ namespace nocopy {
     auto visit(Lambdas... lambdas) const {
       return detail::dispatcher<packed::num_types() - 1, packed>::dispatch(
         get_tag()
-      , [this, callback = detail::lambda_overload<Lambdas...>{std::move(lambdas)...}] (auto t) {
+      , [this, callback = detail::make_overload(std::move(lambdas)...)] (auto t) {
           return callback(typename decltype(t)::original_type{}, this->get_payload<decltype(t)>());
         }
       );
