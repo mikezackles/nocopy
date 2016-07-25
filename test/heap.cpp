@@ -30,8 +30,7 @@ TEST_CASE("deref", "[heap]") {
       heap.malloc(2*sizeof(measurement_t)
       , [heap](nocopy::heap64::offset_t result) mutable {
           auto m = heap.deref<measurement_t>(result);
-          m++;
-          m->get<measurement::first>() = 2000;
+          m[1].get<measurement::first>() = 2000;
           heap.free(result);
         }
       , [](std::error_code) { REQUIRE(false); }
