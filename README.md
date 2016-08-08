@@ -70,23 +70,27 @@ struct measurement {
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
   using type = nocopy::datapack<delta, first, second, coords, locations>;
 };
-using measurement_t = measurement::type;
 
 struct experiment {
-  NOCOPY_FIELD(measure1, measurement_t);
-  NOCOPY_FIELD(more_measurements, NOCOPY_ARRAY(measurement_t, 5));
+  NOCOPY_FIELD(measure1, measurement::type);
+  NOCOPY_FIELD(more_measurements, NOCOPY_ARRAY(measurement::type, 5));
   using type = nocopy::datapack<measure1, more_measurements>;
 };
-using experiment_t = experiment::type;
 
 int main() {
-  experiment_t exp{};
+  experiment::type exp{};
 
   exp.get<experiment::measure1>().get<measurement::second>() = 5;
   exp.get<experiment::more_measurements>()[4].get<measurement::second>() = 12;
 
-  std::cout << exp.get<experiment::measure1>().get<measurement::second>() << " == 5" << std::endl;
-  std::cout << exp.get<experiment::more_measurements>()[4].get<measurement::second>() << " == 12" << std::endl;
+  std::cout
+    << exp.get<experiment::measure1>().get<measurement::second>()
+    << " == 5"
+    << std::endl;
+  std::cout
+    << exp.get<experiment::more_measurements>()[4].get<measurement::second>()
+    << " == 12"
+    << std::endl;
 
   return 0;
 }
@@ -123,10 +127,9 @@ struct abc {
   NOCOPY_FIELD(c, uint8_t);
   using type = nocopy::oneof8<a, b, c>;
 };
-using abc_t = abc::type;
 
 int main() {
-  abc_t instance{};
+  abc::type instance{};
   instance.get<abc::a>() = 4.5;
   instance.visit(
     [](abc::a, float val) {
@@ -142,10 +145,6 @@ int main() {
   return 0;
 }
 ```
-
-Note that the lambdas passed to `abc_t::visit` can appear in any order, and they
-are always passed by value. This is generally true for lambdas passed as
-callbacks to nocopy.
 
 The field type is passed as the first argument to the visitor to allow for
 unions that contain the same type under a different name.
@@ -179,8 +178,7 @@ struct measurement {
   , nocopy::version_range< first,     3, 5 >
   >;
 };
-template <std::size_t Version>
-using measurement_t = typename measurement::type<Version>;
+measurement::type<3> measurement_v3;
 ```
 
 Dynamic Memory ([`nocopy::heap`](test/heap.cpp))
@@ -209,20 +207,24 @@ struct measurement {
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
   using type = nocopy::datapack<delta, first, second, coords, locations>;
 };
-using measurement_t = measurement::type;
 
 int main() {
   std::array<unsigned char, 1_KB> buffer;
-  auto heap = nocopy::heap64::create(&buffer[0], sizeof(buffer)
+  auto heap = nocopy::heap64::create(
+    &buffer[0], sizeof(buffer)
   , [](auto heap) { return heap; }
-  , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
+  , [](std::error_code) -> nocopy::heap64 {
+      throw std::runtime_error{"shouldn't happen"};
+    }
   );
-  auto result = heap.malloc<measurement_t>(
+  auto result = heap.malloc<measurement::type>(
     2
   , [heap](auto result) { return result; }
-  , [](std::error_code) -> nocopy::heap64::offset_t { throw std::runtime_error{"shouldn't happen"}; }
+  , [](std::error_code) -> nocopy::heap64::offset_t {
+      throw std::runtime_error{"shouldn't happen"};
+    }
   );
-  auto m = heap.deref<measurement_t>(result);
+  auto m = heap.deref<measurement::type>(result);
   m[1].get<measurement::first>() = 2000;
   heap.free(result);
   return 0;
