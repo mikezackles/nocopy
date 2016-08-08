@@ -21,7 +21,10 @@ namespace nocopy { namespace detail {
     static constexpr std::size_t byte_multiplier = AssumeSameSizedByte ? 1 : CHAR_BIT;
 
     static_assert(std::is_unsigned<Offset>::value, "Offset type must be signed");
-    static_assert(std::is_unsigned<AlignmentType>::value, "Use an unsigned type (e.g., uint32_t or uint64_t) as the alignment type");
+    static_assert(
+      std::is_unsigned<AlignmentType>::value
+    , "Use an unsigned type (e.g., uint32_t or uint64_t) as the alignment type"
+    );
     static_assert(sizeof(Offset) <= sizeof(std::size_t), "");
     static_assert(sizeof(Offset) <= alignment, "Offset must be smaller than alignment");
 
@@ -33,7 +36,9 @@ namespace nocopy { namespace detail {
       using type = datapack<size, prev, next_free, prev_free>;
     };
     using block_header_t = typename block_header::type;
-    static constexpr Offset block_header_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(sizeof(block_header_t), alignment));
+    static constexpr Offset block_header_size = detail::narrow_cast<Offset>(
+      byte_multiplier * detail::align_to(sizeof(block_header_t), alignment)
+    );
 
     static constexpr Offset list_head_offset = 0;
     static constexpr Offset first_block_offset = block_header_size;
@@ -70,18 +75,24 @@ namespace nocopy { namespace detail {
       constexpr auto T_alignment = alignment_for<T>();
       static_assert(
         (T_alignment < alignment) && alignment % T_alignment == 0
-      , "This data is over-aligned for this heap. Use a bigger heap alignment.");
+      , "This data is over-aligned for this heap. Use a bigger heap alignment."
+      );
       assert(0 < offset && offset < size_);
       return reinterpret_cast<T const*>(&buffer_[offset]);
     }
-    template <typename T> T* deref(Offset offset) noexcept { return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(offset)); }
+    template <typename T>
+    T* deref(Offset offset) noexcept {
+      return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(offset));
+    }
 
     template <typename T, typename ...Callbacks>
     auto malloc(std::size_t count, Callbacks... callbacks) {
       assert(count > 0);
       assert_valid_type<T>();
       auto callback = detail::make_overload(std::move(callbacks)...);
-      Offset target_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(sizeof(T) * count, alignment));
+      Offset target_size = detail::narrow_cast<Offset>(
+        byte_multiplier * detail::align_to(sizeof(T) * count, alignment)
+      );
       assert(target_size < size_);
       Offset offset;
       auto success = each_free([this, &offset, target_size](auto& block) {
@@ -89,7 +100,10 @@ namespace nocopy { namespace detail {
           remove_from_free_list(block);
           mark_as_allocated(block);
           auto result_offset = get_offset(block) + block_header_size;
-          assert(first_block_offset + block_header_size <= result_offset && result_offset < size_ - target_size);
+          assert(
+            first_block_offset + block_header_size <= result_offset
+            && result_offset < size_ - target_size
+          );
           offset = result_offset;
           return true;
         } else {
@@ -141,7 +155,8 @@ namespace nocopy { namespace detail {
 
     template <typename Self, typename Callback>
     static bool each_free(Self&& self, Callback&& callback) {
-      Offset offset = self.get_header(list_head_offset).template get<typename block_header::next_free>();
+      Offset offset = self.get_header(list_head_offset)
+        .template get<typename block_header::next_free>();
       while (offset != list_head_offset) {
         assert(0 < offset && offset < self.size_);
         auto& block = self.get_header(offset);
@@ -152,10 +167,22 @@ namespace nocopy { namespace detail {
       }
       return false;
     }
-    template <typename Callback> bool each_free(Callback&& callback) && { return each_free(std::move(*this), std::forward<Callback>(callback)); }
-    template <typename Callback> bool each_free(Callback&& callback) & { return each_free(*this, std::forward<Callback>(callback)); }
-    template <typename Callback> bool each_free(Callback&& callback) const&& { return each_free(std::move(*this), std::forward<Callback>(callback)); }
-    template <typename Callback> bool each_free(Callback&& callback) const& { return each_free(*this, std::forward<Callback>(callback)); }
+    template <typename Callback>
+    bool each_free(Callback&& callback) && {
+      return each_free(std::move(*this), std::forward<Callback>(callback));
+    }
+    template <typename Callback>
+    bool each_free(Callback&& callback) & {
+      return each_free(*this, std::forward<Callback>(callback));
+    }
+    template <typename Callback>
+    bool each_free(Callback&& callback) const&& {
+      return each_free(std::move(*this), std::forward<Callback>(callback));
+    }
+    template <typename Callback>
+    bool each_free(Callback&& callback) const& {
+      return each_free(*this, std::forward<Callback>(callback));
+    }
 
     static bool is_aligned(unsigned char* buffer) {
       return (reinterpret_cast<std::uintptr_t>(buffer) & (alignment - 1)) == 0;
@@ -185,19 +212,25 @@ namespace nocopy { namespace detail {
     block_header_t const& list_head() const {
       return get_header(list_head_offset);
     }
-    block_header_t& list_head() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).list_head()); }
+    block_header_t& list_head() {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).list_head());
+    }
 
     block_header_t const& first_block() const {
       return get_header(first_block_offset);
     }
-    block_header_t& first_block() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).first_block()); }
+    block_header_t& first_block() {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).first_block());
+    }
 
     // LIFO
     void add_to_free_list(block_header_t& block) {
       auto& head = list_head();
       auto& next = next_free(head);
-      block.template get<typename block_header::next_free>() = head.template get<typename block_header::next_free>();
-      block.template get<typename block_header::prev_free>() = next.template get<typename block_header::prev_free>();
+      block.template get<typename block_header::next_free>()
+        = head.template get<typename block_header::next_free>();
+      block.template get<typename block_header::prev_free>()
+        = next.template get<typename block_header::prev_free>();
       auto block_offset = get_offset(block);
       head.template get<typename block_header::next_free>() = block_offset;
       next.template get<typename block_header::prev_free>() = block_offset;
@@ -206,8 +239,10 @@ namespace nocopy { namespace detail {
     void remove_from_free_list(block_header_t& block) {
       auto& prev = prev_free(block);
       auto& next = next_free(block);
-      prev.template get<typename block_header::next_free>() = block.template get<typename block_header::next_free>();
-      next.template get<typename block_header::prev_free>() = block.template get<typename block_header::prev_free>();
+      prev.template get<typename block_header::next_free>()
+        = block.template get<typename block_header::next_free>();
+      next.template get<typename block_header::prev_free>()
+        = block.template get<typename block_header::prev_free>();
     }
 
     bool trim(block_header_t& block, Offset target_size) {
@@ -242,21 +277,24 @@ namespace nocopy { namespace detail {
       if (prev_is_free && next_is_free) {
         remove_from_free_list(prev);
         remove_from_free_list(next);
-        prev.template get<typename block_header::size>() = prev_size + block_header_size + curr_size + block_header_size + next_size;
+        prev.template get<typename block_header::size>()
+          = prev_size + block_header_size + curr_size + block_header_size + next_size;
         mark_as_free(prev);
         auto& new_next = next_adjacent(prev);
         new_next.template get<typename block_header::prev>() = get_offset(prev);
         return prev;
       } else if (prev_is_free) {
         remove_from_free_list(prev);
-        prev.template get<typename block_header::size>() = prev_size + block_header_size + curr_size;
+        prev.template get<typename block_header::size>()
+          = prev_size + block_header_size + curr_size;
         mark_as_free(prev);
         auto& new_next = next_adjacent(prev);
         new_next.template get<typename block_header::prev>() = get_offset(prev);
         return prev;
       } else if (next_is_free) {
         remove_from_free_list(next);
-        block.template get<typename block_header::size>() = curr_size + block_header_size + next_size;
+        block.template get<typename block_header::size>()
+          = curr_size + block_header_size + next_size;
         mark_as_free(block);
         auto& new_next = next_adjacent(block);
         new_next.template get<typename block_header::prev>() = get_offset(block);
@@ -270,24 +308,32 @@ namespace nocopy { namespace detail {
     block_header_t const& next_free(block_header_t const& block) const {
       return get_header(block.template get<typename block_header::next_free>());
     }
-    block_header_t& next_free(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_free(block)); }
+    block_header_t& next_free(block_header_t const& block) {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_free(block));
+    }
 
     block_header_t const& prev_free(block_header_t const& block) const {
       return get_header(block.template get<typename block_header::prev_free>());
     }
-    block_header_t& prev_free(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_free(block)); }
+    block_header_t& prev_free(block_header_t const& block) {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_free(block));
+    }
 
     block_header_t const& next_adjacent(block_header_t const& block) const {
       Offset size; bool is_free;
       std::tie(size, is_free) = get_block_size(block);
       return get_header(get_offset(block) + block_header_size + size);
     }
-    block_header_t& next_adjacent(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_adjacent(block)); }
+    block_header_t& next_adjacent(block_header_t const& block) {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_adjacent(block));
+    }
 
     block_header_t const& prev_adjacent(block_header_t const& block) const {
       return get_header(block.template get<typename block_header::prev>());
     }
-    block_header_t& prev_adjacent(block_header_t const& block) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_adjacent(block)); }
+    block_header_t& prev_adjacent(block_header_t const& block) {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_adjacent(block));
+    }
 
     static std::tuple<Offset, bool> get_block_size(block_header_t const& block) {
       Offset s = block.template get<typename block_header::size>();
@@ -311,7 +357,9 @@ namespace nocopy { namespace detail {
     block_header_t const& sentinel() const {
       return get_header(sentinel_offset());
     }
-    block_header_t& sentinel() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).sentinel()); }
+    block_header_t& sentinel() {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).sentinel());
+    }
 
     Offset get_offset(block_header_t const& block) const {
       auto ptrdiff = reinterpret_cast<unsigned char const*>(&block) - buffer_;
@@ -321,13 +369,19 @@ namespace nocopy { namespace detail {
     block_header_t const& get_header(Offset offset) const {
       return reinterpret_cast<block_header_t&>(buffer_[offset / byte_multiplier]);
     }
-    block_header_t& get_header(Offset offset) { return const_cast<block_header_t&>(static_cast<heap const&>(*this).get_header(offset)); }
+    block_header_t& get_header(Offset offset) {
+      return const_cast<block_header_t&>(static_cast<heap const&>(*this).get_header(offset));
+    }
 
     // Size is either in bytes or bits depending on AssumeSameSizedByte
     template <typename ...Callbacks>
-    static auto create_helper(bool do_init, unsigned char* buffer, std::size_t size, Callbacks... callbacks) noexcept {
+    static auto create_helper(
+      bool do_init, unsigned char* buffer, std::size_t size, Callbacks... callbacks
+    ) noexcept {
       auto callback = detail::make_overload(std::move(callbacks)...);
-      auto aligned_size = detail::narrow_cast<Offset>(detail::align_backward(size / byte_multiplier, alignment));
+      auto aligned_size = detail::narrow_cast<Offset>(
+        detail::align_backward(size / byte_multiplier, alignment)
+      );
       if (!is_aligned(buffer)) {
         return callback(make_error_code(error::heap_not_aligned));
       } else if (!is_heap_big_enough(aligned_size) || is_heap_too_big(aligned_size)) {

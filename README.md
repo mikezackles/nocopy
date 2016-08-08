@@ -5,7 +5,7 @@ it may still fall short of that goal. Please report bugs!
 Callbacks
 -
 
-All error handling in nocopy is performed via lambda callbacks. Functions that
+All error handling in `nocopy` is performed via lambda callbacks. Functions that
 may result in multiple types and/or a std::error_code accept type-safe lambas
 (in any order). The values passed to these lambas can be handled inline, or they
 may be merged into a single type via return type deduction. For example, you
@@ -275,7 +275,7 @@ little-endian platforms. AFAIK, there is no reliable way to detect endianness at
 compile time, so by default, nocopy performs conversion on all platforms. Your
 compiler may be smart enough to optimize this away, but if you want to be
 certain that no conversion is performed, simply define
-`NOCOPY_OPTIMIZE_LITTLE_ENDIAN` (`OPTIMIZE_LITTLE_ENDIAN` in the cmake cache).
+`NOCOPY_OPTIMIZE_LITTLE_ENDIAN` (`OPTIMIZE_LITTLE_ENDIAN` in the CMake cache).
 Note that if you mistakenly compile with this defined on big-endian platforms,
 the serialized data will not be portable. This flag may also be used to turn off
 conversion regardless of platform if you aren't worried about portability.
@@ -288,4 +288,5 @@ For the Future
   boxing approach similar to that used for endianness.
 * Investigate supporting [Brigand](https://github.com/edouarda/brigand) as an
   alternative to Boost.Hana.
+* Stack allocation
 * Framing
