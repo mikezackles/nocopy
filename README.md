@@ -185,7 +185,8 @@ int main() {
   , [](auto heap) { return heap; }
   , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
   );
-  auto result = heap.malloc(2*sizeof(measurement_t)
+  auto result = heap.malloc<measurement_t>(
+    2
   , [heap](auto result) { return result; }
   , [](std::error_code) -> nocopy::heap64::offset_t { throw std::runtime_error{"shouldn't happen"}; }
   );

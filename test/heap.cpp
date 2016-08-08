@@ -29,7 +29,8 @@ TEST_CASE("deref", "[heap]") {
   , [](auto heap) { return heap; }
   , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
   );
-  auto result = heap.malloc(2*sizeof(measurement_t)
+  auto result = heap.malloc<measurement_t>(
+    2
   , [heap](auto result) { return result; }
   , [](std::error_code) -> nocopy::heap64::offset_t { throw std::runtime_error{"shouldn't happen"}; }
   );
@@ -66,7 +67,7 @@ TEST_CASE("raw heap corruption", "[heap]") {
           auto block_size = rand_block_size();
           bool success = false;
           while (!success) {
-            heap.malloc(block_size
+            heap.malloc<uint8_t>(block_size
             , [&](offset_t result) {
                 allocs.push_back(result);
                 alloc_lookup.insert({{result, block_size}});

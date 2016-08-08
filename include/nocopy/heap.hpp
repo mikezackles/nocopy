@@ -40,6 +40,18 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
+    template <typename T>
+    static constexpr void assert_valid_type() {
+      using base = detail::find_base_t<T>;
+      static_assert(detail::is_valid_base_type<base>(), "Type not compatible with heap");
+    }
+
+    template <typename T>
+    static constexpr auto alignment_for() {
+      using base = detail::find_base_t<T>;
+      return detail::alignment_for<base>::result;
+    }
+
   public:
     using offset_t = Offset; // for client code
 
@@ -55,9 +67,7 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     T const* deref(Offset offset) const noexcept {
-      using base = detail::find_base_t<T>;
-      static_assert(detail::is_valid_base_type<base>(), "Type not compatible with heap");
-      constexpr auto T_alignment = detail::alignment_for<base>::result;
+      constexpr auto T_alignment = alignment_for<T>();
       static_assert(
         (T_alignment < alignment) && alignment % T_alignment == 0
       , "This data is over-aligned for this heap. Use a bigger heap alignment.");
@@ -66,10 +76,12 @@ namespace nocopy { namespace detail {
     }
     template <typename T> T* deref(Offset offset) noexcept { return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(offset)); }
 
-    template <typename ...Callbacks>
-    auto malloc(std::size_t requested_size, Callbacks... callbacks) {
+    template <typename T, typename ...Callbacks>
+    auto malloc(std::size_t count, Callbacks... callbacks) {
+      assert(count > 0);
+      assert_valid_type<T>();
       auto callback = detail::make_overload(std::move(callbacks)...);
-      Offset target_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(requested_size, alignment));
+      Offset target_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(sizeof(T) * count, alignment));
       assert(target_size < size_);
       Offset offset;
       auto success = each_free([this, &offset, target_size](auto& block) {
