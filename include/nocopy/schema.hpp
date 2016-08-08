@@ -13,7 +13,7 @@ namespace nocopy {
   namespace hana = boost::hana;
 
   template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
-  struct archive {
+  struct schema {
   private:
     static constexpr auto fields = hana::make_tuple(hana::type_c<VersionRanges>...);
     struct field_is_in_range {
@@ -37,7 +37,7 @@ namespace nocopy {
   };
 
   template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
-  using archive_t = typename archive<datapack, Version, VersionRanges...>::type;
+  using schema_t = typename schema<datapack, Version, VersionRanges...>::type;
 }
 
 #endif

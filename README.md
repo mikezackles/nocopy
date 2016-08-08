@@ -149,7 +149,7 @@ int main() {
 The field type is passed as the first argument to the visitor to allow for
 unions that contain the same type under a different name.
 
-Versioning ([`nocopy::archive_t`](test/archive.cpp))
+Versioning ([`nocopy::schema_t`](test/archive.cpp))
 -
 
 ```c++
@@ -167,7 +167,7 @@ struct measurement {
   //        field added in this version  |
   template <std::size_t Version> //   |  |
   using type = //                     |  |
-  nocopy::archive_t< //               |  |
+  nocopy::schema_t< //                |  |
     nocopy::datapack //               |  |
   , Version //                        v  v
   , nocopy::version_range< delta,     0    >

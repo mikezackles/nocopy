@@ -28,7 +28,7 @@ target_use_modern_cxx(nocopy TYPE INTERFACE)
 
 add_executable(tests
   "test/main.cpp"
-  "test/archive.cpp"
+  "test/schema.cpp"
   "test/datapack.cpp"
   "test/oneof.cpp"
   "test/heap.cpp")

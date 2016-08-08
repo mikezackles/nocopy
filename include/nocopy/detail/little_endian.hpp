@@ -5,7 +5,14 @@
 #include <cstring>
 #include <type_traits>
 
+#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
+BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <boost/hana/core/when.hpp>
+END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+
 namespace nocopy { namespace detail {
+  namespace hana = boost::hana;
+
   constexpr bool optimize_little_endian() {
   #ifdef NOCOPY_OPTIMIZE_LITTLE_ENDIAN
     return true;
