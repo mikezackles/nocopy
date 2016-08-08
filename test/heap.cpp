@@ -32,10 +32,12 @@ TEST_CASE("deref", "[heap]") {
   );
   auto result = heap.malloc<measurement_t>(
     2
-  , [heap](auto result) { return result; }
-  , [](std::error_code) -> nocopy::heap64::offset_t { throw std::runtime_error{"shouldn't happen"}; }
+  , [](auto result) { return result; }
+  , [](std::error_code) -> nocopy::heap64::reference<measurement_t> {
+      throw std::runtime_error{"shouldn't happen"};
+    }
   );
-  auto m = heap.deref<measurement_t>(result);
+  auto m = heap.deref(result);
   m[1].get<measurement::first>() = 2000;
   heap.free(result);
 }
@@ -53,16 +55,16 @@ TEST_CASE("raw heap corruption", "[heap]") {
     buffer.data(), sizeof(buffer)
   , [&](nocopy::heap32 heap) {
       std::unordered_map<offset_t, offset_t> alloc_lookup{};
-      std::vector<offset_t> allocs;
+      std::vector<nocopy::heap32::reference<uint8_t>> allocs;
       auto free_random = [&]() {
         auto rand_alloc_offset = std::bind(std::uniform_int_distribution<std::size_t>{0, allocs.size()-1}, generator);
         auto alloc_offset = rand_alloc_offset();
-        auto heap_offset = allocs[alloc_offset];
-        heap.free(heap_offset);
+        auto heap_ref = allocs[alloc_offset];
+        heap.free(heap_ref);
         auto it = allocs.begin();
         std::advance(it, alloc_offset);
         allocs.erase(it);
-        alloc_lookup.erase(heap_offset);
+        alloc_lookup.erase(static_cast<offset_t>(heap_ref));
       };
       for(auto i = 0u; i < 1000u; ++i) {
         if (allocs.size() == 0 || flip_coin() < 3) {
@@ -70,9 +72,9 @@ TEST_CASE("raw heap corruption", "[heap]") {
           bool success = false;
           while (!success) {
             heap.malloc<uint8_t>(block_size
-            , [&](offset_t result) {
+            , [&](auto result) {
                 allocs.push_back(result);
-                alloc_lookup.insert({{result, block_size}});
+                alloc_lookup.insert({{static_cast<offset_t>(result), block_size}});
                 success = true;
               }
             , [&](std::error_code) {
@@ -100,7 +102,7 @@ TEST_CASE("raw heap corruption", "[heap]") {
         // Note that actual size is at the very least aligned, so it is often
         // larger than the requested size. It may be even bigger than that if
         // the block was too small to split off the remainder.
-        auto offset = pair.first;
+        offset_t offset = pair.first;
         auto requested_size = pair.second;
         auto actual_size = alloced_offsets[offset];
         REQUIRE(actual_size >= requested_size);

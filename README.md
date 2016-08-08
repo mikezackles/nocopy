@@ -219,12 +219,12 @@ int main() {
   );
   auto result = heap.malloc<measurement::type>(
     2
-  , [heap](auto result) { return result; }
-  , [](std::error_code) -> nocopy::heap64::offset_t {
+  , [](auto result) { return result; }
+  , [](std::error_code) -> nocopy::heap64::reference<measurement::type> {
       throw std::runtime_error{"shouldn't happen"};
     }
   );
-  auto m = heap.deref<measurement::type>(result);
+  auto m = heap.deref(result);
   m[1].get<measurement::first>() = 2000;
   heap.free(result);
   return 0;

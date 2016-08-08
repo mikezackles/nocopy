@@ -45,8 +45,17 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
+    struct make_private {};
   public:
     using offset_t = Offset; // for client code
+
+    template <typename T>
+    struct reference {
+      reference(Offset offset, make_private) : offset_{offset} {}
+      explicit operator Offset() const { return offset_; }
+    private:
+      Offset offset_;
+    };
 
     template <typename ...Args>
     static auto create(Args... args) noexcept {
@@ -59,7 +68,8 @@ namespace nocopy { namespace detail {
     }
 
     template <typename T>
-    T const* deref(Offset offset) const noexcept {
+    T const* deref(reference<T> ref) const noexcept {
+      auto offset = static_cast<Offset>(ref);
       constexpr auto T_alignment = detail::alignment_for<T>();
       static_assert(
         (T_alignment < alignment) && alignment % T_alignment == 0
@@ -69,8 +79,8 @@ namespace nocopy { namespace detail {
       return reinterpret_cast<T const*>(&buffer_[offset]);
     }
     template <typename T>
-    T* deref(Offset offset) noexcept {
-      return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(offset));
+    T* deref(reference<T> ref) noexcept {
+      return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(ref));
     }
 
     template <typename T, typename ...Callbacks>
@@ -99,13 +109,15 @@ namespace nocopy { namespace detail {
         }
       });
       if (success) {
-        return callback(offset);
+        return callback(reference<T>{offset, make_private{}});
       } else {
         return callback(make_error_code(error::out_of_space));
       }
     }
 
-    void free(Offset offset) noexcept {
+    template <typename T>
+    void free(reference<T> ref) noexcept {
+      auto offset = static_cast<Offset>(ref);
       assert(0 < offset && offset < size_);
       auto& block = get_header(offset - block_header_size);
       auto& merged = merge_free_blocks(block); // marks block as free
