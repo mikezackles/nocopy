@@ -314,7 +314,7 @@ namespace nocopy { namespace detail {
     block_header_t& sentinel() { return const_cast<block_header_t&>(static_cast<heap const&>(*this).sentinel()); }
 
     Offset get_offset(block_header_t const& block) const {
-      auto ptrdiff = reinterpret_cast<unsigned char const*>(&block) - &buffer_[0];
+      auto ptrdiff = reinterpret_cast<unsigned char const*>(&block) - buffer_;
       return detail::narrow_cast<Offset>(byte_multiplier * static_cast<std::size_t>(ptrdiff));
     }
 

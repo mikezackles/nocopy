@@ -21,11 +21,11 @@ namespace nocopy { namespace detail {
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
       Scalar result;
-      std::memcpy(&result, &source[0], sizeof(Scalar));
+      std::memcpy(&result, source.data(), sizeof(Scalar));
       return result;
     }
     static void store(Scalar source, byte_array& target) {
-      std::memcpy(&target[0], &source, sizeof(Scalar));
+      std::memcpy(target.data(), &source, sizeof(Scalar));
     }
   };
 

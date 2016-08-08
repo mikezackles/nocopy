@@ -25,7 +25,8 @@ using measurement_t = measurement::type;
 
 TEST_CASE("deref", "[heap]") {
   std::array<unsigned char, 1_KB> buffer;
-  auto heap = nocopy::heap64::create(&buffer[0], sizeof(buffer)
+  auto heap = nocopy::heap64::create(
+    buffer.data(), sizeof(buffer)
   , [](auto heap) { return heap; }
   , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
   );
@@ -48,7 +49,8 @@ TEST_CASE("raw heap corruption", "[heap]") {
   auto rand_block_size = std::bind(std::uniform_int_distribution<std::size_t>{1, 1_KB}, generator);
   auto flip_coin = std::bind(std::uniform_int_distribution<std::size_t>{0, 3}, generator);
 
-  nocopy::heap32::create(&buffer[0], sizeof(buffer)
+  nocopy::heap32::create(
+    buffer.data(), sizeof(buffer)
   , [&](nocopy::heap32 heap) {
       std::unordered_map<offset_t, offset_t> alloc_lookup{};
       std::vector<offset_t> allocs;

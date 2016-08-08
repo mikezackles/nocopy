@@ -211,7 +211,7 @@ struct measurement {
 int main() {
   std::array<unsigned char, 1_KB> buffer;
   auto heap = nocopy::heap64::create(
-    &buffer[0], sizeof(buffer)
+    buffer.data(), sizeof(buffer)
   , [](auto heap) { return heap; }
   , [](std::error_code) -> nocopy::heap64 {
       throw std::runtime_error{"shouldn't happen"};
