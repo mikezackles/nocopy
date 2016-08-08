@@ -87,13 +87,19 @@ namespace nocopy {
     using find_base_t = typename find_base_type<FieldType>::type;
 
     template <typename T, typename = hana::when<true>>
-    struct alignment_for {
+    struct find_alignment {
       static constexpr std::size_t result = T::alignment();
     };
     template <typename T>
-    struct alignment_for<T, hana::when<std::is_scalar<T>::value>> {
+    struct find_alignment<T, hana::when<std::is_scalar<T>::value>> {
       static constexpr std::size_t result = sizeof(T);
     };
+
+    template <typename T>
+    static constexpr auto alignment_for() {
+      using base = detail::find_base_t<T>;
+      return detail::find_alignment<base>::result;
+    }
 
     template <typename BaseType>
     constexpr bool is_valid_base_type() {
@@ -130,6 +136,12 @@ namespace nocopy {
       ;
     }
 
+    template <typename T>
+    static constexpr void assert_valid_type() {
+      using base = detail::find_base_t<T>;
+      static_assert(detail::is_valid_base_type<base>(), "Invalid type");
+    }
+
     template <typename Field>
     struct field_traits {
       using original_type = Field;
@@ -137,7 +149,7 @@ namespace nocopy {
       using base_type = find_base_t<field_type>;
       static_assert(is_valid_base_type<base_type>(), "unsupported field type");
       using return_type = find_return_type_t<field_type>;
-      static constexpr auto alignment = alignment_for<base_type>::result;
+      static constexpr auto alignment = detail::find_alignment<base_type>::result;
       static constexpr auto size = sizeof(return_type);
     };
   }
