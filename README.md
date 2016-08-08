@@ -10,7 +10,39 @@ may result in multiple types and/or a std::error_code accept type-safe lambas
 (in any order). The values passed to these lambas can be handled inline, or they
 may be merged into a single type via return type deduction. For example, you
 might handle an error by returning a valid result, or you could simply throw an
-exception. See below for examples of both styles.
+exception.
+
+###Inline
+```c++
+some_nocopy_function(
+  [](valid_type1 t1) {
+    t1.do_something();
+  }
+, [](valid_type2 t2) {
+    t2.do_something();
+  }
+, [](std::error_code e) {
+    std::cerr << e.message() << std::endl;
+  }
+);
+```
+
+###Bubble Up
+```c++
+int result = some_nocopy_function(
+  [](valid_type1 t1) {
+    return t1.do_something();
+  }
+, [](valid_type2 t2) {
+    return t2.do_something();
+  }
+, [](std::error_code e) {
+    std::cerr << e.message() << std::endl;
+    return 5;
+  }
+);
+std::cout << "result is " << result << std::endl;
+```
 
 Structs ([`nocopy::datapack`](test/datapack.cpp))
 -
