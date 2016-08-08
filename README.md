@@ -2,6 +2,16 @@ This project is still in flux, and although it aims to provide a flexible,
 portable, zero-copy binary encoding without using a standalone schema compiler,
 it may still fall short of that goal. Please report bugs!
 
+Callbacks
+-
+
+All error handling in nocopy is performed via lambda callbacks. Functions that
+may result in multiple types and/or a std::error_code accept type-safe lambas
+(in any order). The values passed to these lambas can be handled inline, or they
+may be merged into a single type via return type deduction. For example, you
+might handle an error by returning a valid result, or you could simply throw an
+exception. See below for examples of both styles.
+
 Structs ([`nocopy::datapack`](test/datapack.cpp))
 -
 
@@ -171,20 +181,17 @@ using measurement_t = measurement::type;
 
 int main() {
   std::array<unsigned char, 1_KB> buffer;
-  nocopy::heap64::create(&buffer[0], sizeof(buffer)
-  , [](nocopy::heap64 heap) {
-      heap.malloc(
-        2 * sizeof(measurement_t)
-      , [heap](nocopy::heap64::offset_t result) mutable {
-          auto m = heap.deref<measurement_t>(result);
-          m[1].get<measurement::first>() = 2000;
-          heap.free(result);
-        }
-      , [](std::error_code) {}
-      );
-    }
-  , [](std::error_code) {}
+  auto heap = nocopy::heap64::create(&buffer[0], sizeof(buffer)
+  , [](auto heap) { return heap; }
+  , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
   );
+  auto result = heap.malloc(2*sizeof(measurement_t)
+  , [heap](auto result) { return result; }
+  , [](std::error_code) -> nocopy::heap64::offset_t { throw std::runtime_error{"shouldn't happen"}; }
+  );
+  auto m = heap.deref<measurement_t>(result);
+  m[1].get<measurement::first>() = 2000;
+  heap.free(result);
   return 0;
 }
 ```
@@ -246,3 +253,4 @@ For the Future
   boxing approach similar to that used for endianness.
 * Investigate supporting [Brigand](https://github.com/edouarda/brigand) as an
   alternative to Boost.Hana.
+* Framing

@@ -25,19 +25,17 @@ using measurement_t = measurement::type;
 
 TEST_CASE("deref", "[heap]") {
   std::array<unsigned char, 1_KB> buffer;
-  nocopy::heap64::create(&buffer[0], sizeof(buffer)
-  , [](nocopy::heap64 heap) {
-      heap.malloc(2*sizeof(measurement_t)
-      , [heap](nocopy::heap64::offset_t result) mutable {
-          auto m = heap.deref<measurement_t>(result);
-          m[1].get<measurement::first>() = 2000;
-          heap.free(result);
-        }
-      , [](std::error_code) { REQUIRE(false); }
-      );
-    }
-  , [](std::error_code) { REQUIRE(false); }
+  auto heap = nocopy::heap64::create(&buffer[0], sizeof(buffer)
+  , [](auto heap) { return heap; }
+  , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
   );
+  auto result = heap.malloc(2*sizeof(measurement_t)
+  , [heap](auto result) { return result; }
+  , [](std::error_code) -> nocopy::heap64::offset_t { throw std::runtime_error{"shouldn't happen"}; }
+  );
+  auto m = heap.deref<measurement_t>(result);
+  m[1].get<measurement::first>() = 2000;
+  heap.free(result);
 }
 
 TEST_CASE("raw heap corruption", "[heap]") {

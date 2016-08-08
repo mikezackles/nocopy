@@ -67,23 +67,28 @@ namespace nocopy { namespace detail {
     template <typename T> T* deref(Offset offset) noexcept { return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(offset)); }
 
     template <typename ...Callbacks>
-    void malloc(std::size_t requested_size, Callbacks... callbacks) noexcept {
+    auto malloc(std::size_t requested_size, Callbacks... callbacks) {
       auto callback = detail::make_overload(std::move(callbacks)...);
       Offset target_size = detail::narrow_cast<Offset>(byte_multiplier * detail::align_to(requested_size, alignment));
       assert(target_size < size_);
-      auto found = each_free([=](auto& block) mutable {
+      Offset offset;
+      auto success = each_free([this, &offset, target_size](auto& block) {
         if (trim(block, target_size)) {
           remove_from_free_list(block);
           mark_as_allocated(block);
           auto result_offset = get_offset(block) + block_header_size;
           assert(first_block_offset + block_header_size <= result_offset && result_offset < size_ - target_size);
-          callback(result_offset);
+          offset = result_offset;
           return true;
         } else {
           return false;
         }
       });
-      if (!found) callback(make_error_code(error::out_of_space));
+      if (success) {
+        return callback(offset);
+      } else {
+        return callback(make_error_code(error::out_of_space));
+      }
     }
 
     void free(Offset offset) noexcept {
@@ -93,36 +98,34 @@ namespace nocopy { namespace detail {
       add_to_free_list(merged);
     }
 
-    template <typename Callback> void each_block(Callback&& callback) && { each_block(std::move(*this), std::forward<Callback>(callback)); }
-    template <typename Callback> void each_block(Callback&& callback) & { each_block(*this, std::forward<Callback>(callback)); }
-    template <typename Callback> void each_block(Callback&& callback) const&& { each_block(std::move(*this), std::forward<Callback>(callback)); }
-    template <typename Callback> void each_block(Callback&& callback) const& { each_block(*this, std::forward<Callback>(callback)); }
-
+    // This is to facilitate testing
     template <typename Callback>
-    void each_free_block(Callback&& callback) const noexcept {
+    void each_block(Callback&& callback) const {
+      Offset offset = first_block_offset;
+      while(offset < sentinel_offset()) {
+        auto& block = get_header(offset);
+        Offset size; bool is_free;
+        std::tie(size, is_free) = get_block_size(block);
+        callback(size, is_free, offset + block_header_size);
+        offset += block_header_size + size;
+      }
+      assert(offset == sentinel_offset());
+    }
+
+    // This is to facilitate testing
+    template <typename Callback>
+    void each_free_block(Callback&& callback) const {
       each_free([this, &callback](auto& block) {
         Offset size; bool is_free;
         std::tie(size, is_free) = get_block_size(block);
         assert(is_free);
-        Offset offset = get_offset(block) + block_header_size;
+        auto offset = get_offset(block) + block_header_size;
         callback(size, offset);
         return false;
       });
     }
 
   private:
-    template <typename Self, typename Callback>
-    static void each_block(Self&& self, Callback&& callback) {
-      Offset offset = first_block_offset;
-      while(offset < self.sentinel_offset()) {
-        auto& block = self.get_header(offset);
-        Offset size; bool is_free;
-        std::tie(size, is_free) = get_block_size(block);
-        callback(size, is_free, offset + block_header_size);
-        offset += block_header_size + size;
-      }
-      assert(offset == self.sentinel_offset());
-    }
 
     template <typename Self, typename Callback>
     static bool each_free(Self&& self, Callback&& callback) {
