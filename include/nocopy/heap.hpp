@@ -10,6 +10,11 @@
 #include <nocopy/field.hpp>
 #include <nocopy/errors.hpp>
 
+#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
+BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <span.h>
+END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+
 #include <cassert>
 #include <tuple>
 #include <type_traits>
@@ -45,15 +50,40 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
-    struct make_private {};
+    template <typename T, Offset Count>
+    struct range {
+      range(Offset) {}
+      constexpr auto to_span(T const* t) const { return gsl::span<T const, Count>{t}; }
+      constexpr auto to_span(T* t) { return gsl::span<T, Count>{t}; }
+    };
+
+    static constexpr Offset dynamic_count = 0;
+    template <typename T>
+    struct range<T, dynamic_count> {
+      range(Offset count) : count_{count} {
+        assert(count_ > 0);
+      }
+      auto to_span(T const* t) const {
+        using index_type = typename gsl::span<T const>::index_type;
+        return gsl::span<T const>{t, static_cast<index_type>(count_)};
+      }
+      auto to_span(T* t) {
+        using index_type = typename gsl::span<T const>::index_type;
+        return gsl::span<T>{t, static_cast<index_type>(count_)};
+      }
+    private:
+      Offset count_;
+    };
+
   public:
     using offset_t = Offset; // for client code
 
-    template <typename T>
-    struct reference {
-      reference(Offset offset, make_private) : offset_{offset} {}
+    template <typename T, Offset Count = 0>
+    struct reference : range<T, Count> {
       explicit operator Offset() const { return offset_; }
     private:
+      friend class heap;
+      reference(Offset offset, Offset extent = Count) : range<T, Count>(extent),  offset_{offset} {}
       Offset offset_;
     };
 
@@ -67,56 +97,45 @@ namespace nocopy { namespace detail {
       return create_helper(false, args...);
     }
 
-    template <typename T>
-    T const* deref(reference<T> ref) const noexcept {
+    template <typename T, Offset Count>
+    auto deref(reference<T, Count> const ref) const noexcept {
       auto offset = static_cast<Offset>(ref);
-      constexpr auto T_alignment = detail::alignment_for<T>();
-      static_assert(
-        (T_alignment < alignment) && alignment % T_alignment == 0
-      , "This data is over-aligned for this heap. Use a bigger heap alignment."
-      );
-      assert(0 < offset && offset < size_);
-      return reinterpret_cast<T const*>(&buffer_[offset]);
+      return ref.to_span(reinterpret_cast<T const*>(&buffer_[offset]));
     }
-    template <typename T>
-    T* deref(reference<T> ref) noexcept {
-      return const_cast<T*>(static_cast<heap const&>(*this).deref<T>(ref));
+    template <typename T, Offset Count>
+    auto deref(reference<T, Count> ref) noexcept {
+      auto offset = static_cast<Offset>(ref);
+      return ref.to_span(reinterpret_cast<T*>(&buffer_[offset]));
+    }
+
+    template <typename T, Offset Count, typename ...Callbacks>
+    auto malloc(Callbacks... callbacks) {
+      detail::assert_valid_type<T>();
+      auto callback = detail::make_overload(std::move(callbacks)...);
+      return malloc_helper(
+        sizeof(T) * Count
+      , [&callback](Offset offset) {
+          return callback(reference<T, Count>{offset});
+        }
+      , [&callback](std::error_code e) { return callback(e); }
+      );
     }
 
     template <typename T, typename ...Callbacks>
-    auto malloc(std::size_t count, Callbacks... callbacks) {
-      assert(count > 0);
+    auto malloc(Offset count, Callbacks... callbacks) {
       detail::assert_valid_type<T>();
       auto callback = detail::make_overload(std::move(callbacks)...);
-      Offset target_size = detail::narrow_cast<Offset>(
-        byte_multiplier * detail::align_to(sizeof(T) * count, alignment)
-      );
-      assert(target_size < size_);
-      Offset offset;
-      auto success = each_free([this, &offset, target_size](auto& block) {
-        if (trim(block, target_size)) {
-          remove_from_free_list(block);
-          mark_as_allocated(block);
-          auto result_offset = get_offset(block) + block_header_size;
-          assert(
-            first_block_offset + block_header_size <= result_offset
-            && result_offset < size_ - target_size
-          );
-          offset = result_offset;
-          return true;
-        } else {
-          return false;
+      return malloc_helper(
+        sizeof(T) * count
+      , [&callback, count](Offset offset) {
+          return callback(reference<T>{offset, count});
         }
-      });
-      if (success) {
-        return callback(reference<T>{offset, make_private{}});
-      } else {
-        return callback(make_error_code(error::out_of_space));
-      }
+      , [&callback](std::error_code e) { return callback(e); }
+      );
     }
 
-    template <typename T>
-    void free(reference<T> ref) noexcept {
+    template <typename T, Offset Count>
+    void free(reference<T, Count> ref) noexcept {
       auto offset = static_cast<Offset>(ref);
       assert(0 < offset && offset < size_);
       auto& block = get_header(offset - block_header_size);
@@ -152,6 +171,35 @@ namespace nocopy { namespace detail {
     }
 
   private:
+    template <typename ...Callbacks>
+    auto malloc_helper(std::size_t requested_size, Callbacks... callbacks) {
+      auto callback = detail::make_overload(std::move(callbacks)...);
+      Offset target_size = detail::narrow_cast<Offset>(
+        byte_multiplier * detail::align_to(requested_size, alignment)
+      );
+      assert(target_size < size_);
+      Offset offset;
+      auto success = each_free([this, &offset, target_size](auto& block) {
+        if (trim(block, target_size)) {
+          remove_from_free_list(block);
+          mark_as_allocated(block);
+          auto result_offset = get_offset(block) + block_header_size;
+          assert(
+            first_block_offset + block_header_size <= result_offset
+            && result_offset < size_ - target_size
+          );
+          offset = result_offset;
+          return true;
+        } else {
+          return false;
+        }
+      });
+      if (success) {
+        return callback(offset);
+      } else {
+        return callback(make_error_code(error::out_of_space));
+      }
+    }
 
     template <typename Self, typename Callback>
     static bool each_free(Self&& self, Callback&& callback) {

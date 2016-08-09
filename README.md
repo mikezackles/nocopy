@@ -290,3 +290,4 @@ For the Future
   alternative to Boost.Hana.
 * Stack allocation
 * Framing
+* Consider a migration-like schema instead of version ranges

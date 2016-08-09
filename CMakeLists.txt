@@ -11,6 +11,8 @@ project(nocopy VERSION 0.1 LANGUAGES CXX)
 
 set(HANA_LOCATION "${CMAKE_SOURCE_DIR}/bundle/hana" CACHE PATH
   "the location of the hana library")
+set(GSL_LOCATION "${CMAKE_SOURCE_DIR}/bundle/gsl" CACHE PATH
+  "the location of the GSL library")
 set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
 
 set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
@@ -22,7 +24,8 @@ target_compile_definitions(nocopy
 target_include_directories(nocopy
   INTERFACE
   "include"
-  "${HANA_LOCATION}/include")
+  "${HANA_LOCATION}/include"
+  "${GSL_LOCATION}/include")
 # TODO - whitelist features here if necessary
 target_use_modern_cxx(nocopy TYPE INTERFACE)
 

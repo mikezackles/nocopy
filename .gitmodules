@@ -7,3 +7,6 @@
 [submodule "bundle/hana"]
 	path = bundle/hana
 	url = git://github.com/boostorg/hana
+[submodule "bundle/gsl"]
+	path = bundle/gsl
+	url = git://github.com/Microsoft/GSL

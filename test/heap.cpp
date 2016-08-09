@@ -48,7 +48,7 @@ TEST_CASE("raw heap corruption", "[heap]") {
 
   auto seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator{seed};
-  auto rand_block_size = std::bind(std::uniform_int_distribution<std::size_t>{1, 1_KB}, generator);
+  auto rand_block_size = std::bind(std::uniform_int_distribution<offset_t>{1, 1_KB}, generator);
   auto flip_coin = std::bind(std::uniform_int_distribution<std::size_t>{0, 3}, generator);
 
   nocopy::heap32::create(

@@ -10,7 +10,8 @@
     _Pragma("clang diagnostic ignored \"-Wshadow\"") \
     _Pragma("clang diagnostic ignored \"-Wdouble-promotion\"") \
     _Pragma("clang diagnostic ignored \"-Wclass-varargs\"") \
-    _Pragma("clang diagnostic ignored \"-Wexit-time-destructors\"")
+    _Pragma("clang diagnostic ignored \"-Wexit-time-destructors\"") \
+    _Pragma("clang diagnostic ignored \"-Wnewline-eof\"")
 #else
   #define BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #endif
