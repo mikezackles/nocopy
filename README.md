@@ -220,7 +220,7 @@ int main() {
   auto result = heap.malloc<measurement::type>(
     2
   , [](auto result) { return result; }
-  , [](std::error_code) -> nocopy::heap64::reference<measurement::type> {
+  , [](std::error_code) -> nocopy::heap64::reference<measurement::type, false> {
       throw std::runtime_error{"shouldn't happen"};
     }
   );

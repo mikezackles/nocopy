@@ -50,43 +50,43 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
-    template <typename T, bool single_allocation>
-    struct range {};
+  public:
+    using offset_t = Offset; // for client code
+
+    template <typename T, bool is_single>
+    struct reference {};
 
     template <typename T>
-    struct range<T, false> {
-      range(Offset count) : count_{count} {
-        assert(count_ > 0);
-      }
-      auto unpack(T const* t) const {
+    struct reference<T, true> {
+      // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
+      explicit operator Offset() const { return offset_; }
+      constexpr T const& deref(T const* t) const { return *t; }
+      constexpr T& deref(T* t) { return *t; }
+    private:
+      friend class heap;
+      reference(Offset offset) : offset_{offset} {}
+      Offset offset_;
+    };
+
+    template <typename T>
+    struct reference<T, false> {
+      // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
+      explicit operator Offset() const { return offset_; }
+      auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
         return gsl::span<T const>{t, static_cast<index_type>(count_)};
       }
-      auto unpack(T* t) {
+      auto deref(T* t) {
         using index_type = typename gsl::span<T const>::index_type;
         return gsl::span<T>{t, static_cast<index_type>(count_)};
       }
     private:
-      Offset count_;
-    };
-
-    template <typename T>
-    struct range<T, true> {
-      range() {}
-      constexpr T const& unpack(T const* t) const { return *t; }
-      constexpr T& unpack(T* t) { return *t; }
-    };
-
-  public:
-    using offset_t = Offset; // for client code
-
-    template <typename T, Offset Count = 0>
-    struct reference : range<T, Count> {
-      explicit operator Offset() const { return offset_; }
-    private:
       friend class heap;
-      reference(Offset offset, Offset extent = Count) : range<T, Count>(extent),  offset_{offset} {}
+      reference(Offset offset, Offset count) : offset_{offset}, count_{count} {
+        assert(count_ > 0);
+      }
       Offset offset_;
+      Offset count_;
     };
 
     template <typename ...Args>
@@ -99,15 +99,15 @@ namespace nocopy { namespace detail {
       return create_helper(false, args...);
     }
 
-    template <typename T, Offset Count>
-    decltype(auto) deref(reference<T, Count> const ref) const noexcept {
+    template <typename T, bool Unused>
+    decltype(auto) deref(reference<T, Unused> const ref) const noexcept {
       auto offset = static_cast<Offset>(ref);
-      return ref.unpack(reinterpret_cast<T const*>(&buffer_[offset]));
+      return ref.deref(reinterpret_cast<T const*>(&buffer_[offset]));
     }
-    template <typename T, Offset Count>
-    decltype(auto) deref(reference<T, Count> ref) noexcept {
+    template <typename T, bool Unused>
+    decltype(auto) deref(reference<T, Unused> ref) noexcept {
       auto offset = static_cast<Offset>(ref);
-      return ref.unpack(reinterpret_cast<T*>(&buffer_[offset]));
+      return ref.deref(reinterpret_cast<T*>(&buffer_[offset]));
     }
 
     template <typename T, Offset Count, typename ...Callbacks>
@@ -136,8 +136,8 @@ namespace nocopy { namespace detail {
       );
     }
 
-    template <typename T, Offset Count>
-    void free(reference<T, Count> ref) noexcept {
+    template <typename T, bool Unused>
+    void free(reference<T, Unused> ref) noexcept {
       auto offset = static_cast<Offset>(ref);
       assert(0 < offset && offset < size_);
       auto& block = get_header(offset - block_header_size);
