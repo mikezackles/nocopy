@@ -30,10 +30,10 @@ TEST_CASE("deref", "[heap]") {
   , [](auto heap) { return heap; }
   , [](std::error_code) -> nocopy::heap64 { throw std::runtime_error{"shouldn't happen"}; }
   );
-  auto result = heap.malloc<measurement_t>(
+  auto result = heap.malloc_range<measurement_t>(
     2
   , [](auto result) { return result; }
-  , [](std::error_code) -> nocopy::heap64::reference<measurement_t, false> {
+  , [](std::error_code) -> nocopy::heap64::range_reference<measurement_t> {
       throw std::runtime_error{"shouldn't happen"};
     }
   );
@@ -55,7 +55,7 @@ TEST_CASE("raw heap corruption", "[heap]") {
     buffer.data(), sizeof(buffer)
   , [&](nocopy::heap32 heap) {
       std::unordered_map<offset_t, offset_t> alloc_lookup{};
-      std::vector<nocopy::heap32::reference<uint8_t, false>> allocs;
+      std::vector<nocopy::heap32::range_reference<uint8_t>> allocs;
       auto free_random = [&]() {
         auto rand_alloc_offset = std::bind(std::uniform_int_distribution<std::size_t>{0, allocs.size()-1}, generator);
         auto alloc_offset = rand_alloc_offset();
@@ -71,7 +71,7 @@ TEST_CASE("raw heap corruption", "[heap]") {
           auto block_size = rand_block_size();
           bool success = false;
           while (!success) {
-            heap.malloc<uint8_t>(block_size
+            heap.malloc_range<uint8_t>(block_size
             , [&](auto result) {
                 allocs.push_back(result);
                 alloc_lookup.insert({{static_cast<offset_t>(result), block_size}});

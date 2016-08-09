@@ -217,10 +217,10 @@ int main() {
       throw std::runtime_error{"shouldn't happen"};
     }
   );
-  auto result = heap.malloc<measurement::type>(
+  auto result = heap.malloc_range<measurement::type>(
     2
   , [](auto result) { return result; }
-  , [](std::error_code) -> nocopy::heap64::reference<measurement::type, false> {
+  , [](std::error_code) -> nocopy::heap64::range_reference<measurement::type> {
       throw std::runtime_error{"shouldn't happen"};
     }
   );

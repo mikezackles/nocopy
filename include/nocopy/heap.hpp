@@ -50,9 +50,6 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
-  public:
-    using offset_t = Offset; // for client code
-
     template <typename T, bool is_single>
     struct reference {};
 
@@ -89,6 +86,15 @@ namespace nocopy { namespace detail {
       Offset count_;
     };
 
+  public:
+    using offset_t = Offset; // for client code
+
+    template <typename T>
+    using single_reference = reference<T, true>;
+
+    template <typename T>
+    using range_reference = reference<T, false>;
+
     template <typename ...Args>
     static auto create(Args... args) noexcept {
       return create_helper(true, args...);
@@ -110,27 +116,27 @@ namespace nocopy { namespace detail {
       return ref.deref(reinterpret_cast<T*>(&buffer_[offset]));
     }
 
-    template <typename T, Offset Count, typename ...Callbacks>
+    template <typename T, typename ...Callbacks>
     auto malloc(Callbacks... callbacks) {
       detail::assert_valid_type<T>();
       auto callback = detail::make_overload(std::move(callbacks)...);
       return malloc_helper(
-        sizeof(T) * Count
+        sizeof(T)
       , [&callback](Offset offset) {
-          return callback(reference<T, true>{offset});
+          return callback(single_reference<T>{offset});
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
     }
 
     template <typename T, typename ...Callbacks>
-    auto malloc(Offset count, Callbacks... callbacks) {
+    auto malloc_range(Offset count, Callbacks... callbacks) {
       detail::assert_valid_type<T>();
       auto callback = detail::make_overload(std::move(callbacks)...);
       return malloc_helper(
         sizeof(T) * count
       , [&callback, count](Offset offset) {
-          return callback(reference<T, false>{offset, count});
+          return callback(range_reference<T>{offset, count});
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
