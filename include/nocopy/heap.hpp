@@ -50,29 +50,31 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
-    template <typename T, Offset Count>
-    struct range {
-      range(Offset) {}
-      constexpr auto to_span(T const* t) const { return gsl::span<T const, Count>{t}; }
-      constexpr auto to_span(T* t) { return gsl::span<T, Count>{t}; }
-    };
+    template <typename T, bool single_allocation>
+    struct range {};
 
-    static constexpr Offset dynamic_count = 0;
     template <typename T>
-    struct range<T, dynamic_count> {
+    struct range<T, false> {
       range(Offset count) : count_{count} {
         assert(count_ > 0);
       }
-      auto to_span(T const* t) const {
+      auto unpack(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
         return gsl::span<T const>{t, static_cast<index_type>(count_)};
       }
-      auto to_span(T* t) {
+      auto unpack(T* t) {
         using index_type = typename gsl::span<T const>::index_type;
         return gsl::span<T>{t, static_cast<index_type>(count_)};
       }
     private:
       Offset count_;
+    };
+
+    template <typename T>
+    struct range<T, true> {
+      range() {}
+      constexpr T const& unpack(T const* t) const { return *t; }
+      constexpr T& unpack(T* t) { return *t; }
     };
 
   public:
@@ -98,14 +100,14 @@ namespace nocopy { namespace detail {
     }
 
     template <typename T, Offset Count>
-    auto deref(reference<T, Count> const ref) const noexcept {
+    decltype(auto) deref(reference<T, Count> const ref) const noexcept {
       auto offset = static_cast<Offset>(ref);
-      return ref.to_span(reinterpret_cast<T const*>(&buffer_[offset]));
+      return ref.unpack(reinterpret_cast<T const*>(&buffer_[offset]));
     }
     template <typename T, Offset Count>
-    auto deref(reference<T, Count> ref) noexcept {
+    decltype(auto) deref(reference<T, Count> ref) noexcept {
       auto offset = static_cast<Offset>(ref);
-      return ref.to_span(reinterpret_cast<T*>(&buffer_[offset]));
+      return ref.unpack(reinterpret_cast<T*>(&buffer_[offset]));
     }
 
     template <typename T, Offset Count, typename ...Callbacks>
@@ -115,7 +117,7 @@ namespace nocopy { namespace detail {
       return malloc_helper(
         sizeof(T) * Count
       , [&callback](Offset offset) {
-          return callback(reference<T, Count>{offset});
+          return callback(reference<T, true>{offset});
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
@@ -128,7 +130,7 @@ namespace nocopy { namespace detail {
       return malloc_helper(
         sizeof(T) * count
       , [&callback, count](Offset offset) {
-          return callback(reference<T>{offset, count});
+          return callback(reference<T, false>{offset, count});
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
