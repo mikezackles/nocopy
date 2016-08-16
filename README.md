@@ -1,16 +1,25 @@
-This project is still in flux, and although it aims to provide a flexible,
-portable, zero-copy binary encoding without using a standalone schema compiler,
-it may still fall short of that goal. Please report bugs!
+Overview
+-
+
+`nocopy` is a header-only library that aims to provide a simple, type-safe,
+compile-time, zero-copy solution to serialization. As of this writing, the
+[`include`](include/) directory contains less than 1500 lines of code.
+
+This project was inspired by
+[FlatBuffers](https://google.github.io/flatbuffers/) and
+[Cap'n Proto](https://capnproto.org/). Unlike those projects, `nocopy` makes no
+attempt to directly support any languages other than C++14, and therefore there
+is no standalone schema compiler. Your C++ compiler is your schema compiler.
 
 Callbacks
 -
 
-All error handling in `nocopy` is performed via lambda callbacks. Functions that
-may result in multiple types and/or a std::error_code accept type-safe lambas
-(in any order). The values passed to these lambas can be handled inline, or they
-may be merged into a single type via return type deduction. For example, you
-might handle an error by returning a valid result, or you could simply throw an
-exception.
+All runtime error handling and visitation in `nocopy` is performed via lambda
+callbacks. Functions that may result in multiple types and/or a
+`std::error_code` accept type-safe lambas (in any order). The values passed to
+these lambas can be handled inline, or they may be merged into a single type via
+return type deduction. For example, you might handle an error by returning a
+valid result, or you could simply throw an exception.
 
 ###Inline
 ```c++
@@ -44,18 +53,34 @@ int result = some_nocopy_function(
 std::cout << "result is " << result << std::endl;
 ```
 
+###Ignore
+```c++
+int result = some_nocopy_function(
+  [](valid_type1 t1) {
+    return t1.do_something();
+  }
+, [](valid_type2 t2) {
+    return t2.do_something();
+  }
+, [](std::error_code e) -> int {
+    throw std::runtime_error{e.message()};
+  }
+);
+std::cout << "result is " << result << std::endl;
+```
+
 Structs ([`nocopy::datapack`](test/datapack.cpp))
 -
 
-Nocopy datapacks are essentially traditional packed structs, but the packing is
-performed automatically at compile time. Scalar types are aligned to their size,
-and datapack fields are sorted by alignment from largest to smallest. Because
-these alignments are all guaranteed to be powers of two, smaller alignments
-divide larger ones. This ensures that if the datapack itself is aligned to the
-alignment of the largest field, all its members are aligned. Padding is inserted
-to align the end of the datapack with the largest alignment it contains. This
-ensures that datapacks can contain other datapacks as nested fields without
-affecting the alignment of subsequent fields.
+`nocopy` datapacks are essentially traditional packed structs, but the packing
+is performed automatically at compile time. Scalar types are aligned to their
+size, and datapack fields are sorted by alignment from largest to smallest.
+Because these alignments are all guaranteed to be powers of two, smaller
+alignments divide larger ones. This ensures that if the datapack itself is
+aligned to the alignment of the largest field, all its members are aligned.
+Padding is inserted to align the end of the datapack with the largest alignment
+it contains. This ensures that datapacks can contain other datapacks as nested
+fields without affecting the alignment of subsequent fields.
 
 ```c++
 #include <nocopy.hpp>
@@ -111,8 +136,8 @@ them, their definitions are as follows:
 #define NOCOPY_ONEOF16(...) ::nocopy::oneof16<__VA_ARGS__>
 ```
 
-Technically, `field_name::name` is currently unused, but it may be used in the
-future for doing things like dumping to JSON.
+Technically, `field_name::name` is currently unused, but it is intended to
+support JSON dumps.
 
 Unions ([`nocopy::oneof`](test/oneof.cpp))
 -
@@ -184,16 +209,16 @@ measurement::type<3> measurement_v3;
 Dynamic Memory ([`nocopy::heap`](test/heap.cpp))
 -
 
-Nocopy includes a very basic heap implementation (not thread safe). So, for
-example, one system could create a heap inside a buffer, send the buffer to
-another system, and that system could then edit it directly. There may also be
-interesting possibilities here using COW filesystems such as btrfs.
-
-A higher level interface may be forthcoming, but for now, clients must manage
-heap allocations manually.
+Right now this is mostly a proof of concept, but `nocopy` includes a very basic
+heap implementation (not thread safe). So, for example, one system could create
+a heap inside a buffer, send the buffer to another system, and that system could
+then edit it directly. Please let me know if you find interesting use cases.
 
 For variable byte size heap support, make sure to set the AssumeSameSizedByte
 template parameter to false (divides the maximum heap size by `CHAR_BIT`).
+
+Note that a higher level interface may be forthcoming, but for now, clients must
+manage heap allocations manually.
 
 ```c++
 #include <nocopy.hpp>
@@ -218,7 +243,7 @@ int main() {
     }
   );
   auto result = heap.malloc_range<measurement::type>(
-    2
+    2 // allocate space for 2 instances
   , [](auto result) { return result; }
   , [](std::error_code) -> nocopy::heap64::range_reference<measurement::type> {
       throw std::runtime_error{"shouldn't happen"};
@@ -234,7 +259,7 @@ int main() {
 Platforms
 -
 
-Nocopy uses [Boost.Hana](https://github.com/boostorg/hana), which requires
+`nocopy` uses [Boost.Hana](https://github.com/boostorg/hana), which requires
 relatively strict C++14 compliance. As such, nocopy is limited to the platforms
 on which Boost.Hana compiles (current versions of gcc or clang, including
 clang-cl). For now, my tests are limited to these two compilers on Arch Linux.
@@ -244,9 +269,9 @@ Assumptions
 
 * std::array is POD and `sizeof(std::array<unsigned char, N>) == N`
 * floating point numbers are in IEEE 754 format, float contains 32 bits, and
-  double contains 64 bits
+ double contains 64 bits
 
-Nocopy does its best to check assumptions at compile time, so if for some reason
+`nocopy` does its best to check assumptions at compile time, so if for some reason
 your platform is not compatible, your code should fail to compile. Note that
 features that are not used are not checked, so for example if you intend to
 support platforms with exotic floating point implementations, you can still
@@ -259,26 +284,33 @@ support is theoretical as I have no such hardware on which to test.
 Strict Aliasing
 -
 
-Nocopy uses `reinterpret_cast`, but special care has been taken to avoid strict
-aliasing errors. Specifically, `reinterpret_cast` is only used to convert
-references to unsigned char to references to POD types whose sole data member is
-`std::array<unsigned char, N>`. It is also used to cast scalar types to unsigned
-char during endian conversion. I've done my best to interpret the standard, but
-I am not a language lawyer, so please let me know if I've misunderstood
-something here.
+`nocopy` uses `reinterpret_cast`, but special care has been taken to avoid
+strict aliasing errors. Specifically, `reinterpret_cast` is only used to convert
+references to `unsigned char` to references to aggregate types whose sole data
+member is `std::array<unsigned char, N>`. It is also used to cast scalar types
+to `unsigned char` during endian conversion. I've done my best to interpret the
+standard, but I am not a language lawyer, so please let me know if I've
+misunderstood something here.
 
 Optimization
 -
 
-As data is stored in little-endian format, no conversion should be performed on
+As data is stored in little-endian format, no conversion is necessary on
 little-endian platforms. AFAIK, there is no reliable way to detect endianness at
-compile time, so by default, nocopy performs conversion on all platforms. Your
+compile time, so by default, `nocopy` performs conversion on all platforms. Your
 compiler may be smart enough to optimize this away, but if you want to be
 certain that no conversion is performed, simply define
 `NOCOPY_OPTIMIZE_LITTLE_ENDIAN` (`OPTIMIZE_LITTLE_ENDIAN` in the CMake cache).
 Note that if you mistakenly compile with this defined on big-endian platforms,
 the serialized data will not be portable. This flag may also be used to turn off
 conversion regardless of platform if you aren't worried about portability.
+
+Disclaimer
+-
+
+This project is still in flux, and although it aims to generate a stable,
+portable binary encoding, it may still fall short of that goal. Use at your own
+risk, and please report bugs!
 
 For the Future
 -
@@ -291,3 +323,5 @@ For the Future
 * Stack allocation
 * Framing
 * Consider a migration-like schema instead of version ranges
+* Consider migrating heap corruption test to
+  [rapidcheck](https://github.com/emil-e/rapidcheck)
