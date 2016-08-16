@@ -30,7 +30,7 @@ namespace nocopy {
       );
     }
 
-  private:
+    // I'd make this private, but then this wouldn't technically be an aggregate
     alignas(alignment()) std::array<unsigned char, fieldpack::packed_size> buffer_;
   };
 }

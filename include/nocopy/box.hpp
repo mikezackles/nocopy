@@ -28,7 +28,8 @@ namespace nocopy {
       return *this;
     }
     operator Scalar() const { return detail::little_endian<Scalar>::load(buffer_); }
-  private:
+
+    // I'd make this private, but then this wouldn't technically be an aggregate
     alignas(sizeof(Scalar)) std::array<unsigned char, sizeof(Scalar)> buffer_;
   };
 }

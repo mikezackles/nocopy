@@ -92,6 +92,8 @@ namespace nocopy {
       );
     }
 
+  public:
+    // I'd make this private, but then this wouldn't technically be an aggregate
     alignas(alignment()) std::array<unsigned char, size()> buffer_;
   };
 
