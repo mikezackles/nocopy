@@ -24,13 +24,13 @@ namespace nocopy {
       return *this;
     }
     box& operator=(Scalar scalar) {
-      detail::little_endian<Scalar>::store(scalar, buffer_);
+      detail::little_endian<Scalar>::store(scalar, buffer);
       return *this;
     }
-    operator Scalar() const { return detail::little_endian<Scalar>::load(buffer_); }
+    operator Scalar() const { return detail::little_endian<Scalar>::load(buffer); }
 
     // I'd make this private, but then this wouldn't technically be an aggregate
-    alignas(sizeof(Scalar)) std::array<unsigned char, sizeof(Scalar)> buffer_;
+    alignas(sizeof(Scalar)) std::array<unsigned char, sizeof(Scalar)> buffer;
   };
 }
 

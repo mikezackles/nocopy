@@ -19,7 +19,7 @@ namespace nocopy {
     template <typename Field>
     auto const& get() const {
       return reinterpret_cast<typename detail::field_traits<Field>::return_type const&>(
-        buffer_[fieldpack::template get_offset<detail::field_traits<Field>>()]
+        buffer[fieldpack::template get_offset<detail::field_traits<Field>>()]
       );
     }
 
@@ -31,7 +31,7 @@ namespace nocopy {
     }
 
     // I'd make this private, but then this wouldn't technically be an aggregate
-    alignas(alignment()) std::array<unsigned char, fieldpack::packed_size> buffer_;
+    alignas(alignment()) std::array<unsigned char, fieldpack::packed_size> buffer;
   };
 }
 

@@ -71,17 +71,17 @@ namespace nocopy {
     }
   private:
     Tag get_tag() const {
-      return reinterpret_cast<detail::boxer_t<Tag> const&>(buffer_[0]);
+      return reinterpret_cast<detail::boxer_t<Tag> const&>(buffer[0]);
     }
 
     void set_tag(Tag tag) {
-      reinterpret_cast<detail::boxer_t<Tag>&>(buffer_[0]) = tag;
+      reinterpret_cast<detail::boxer_t<Tag>&>(buffer[0]) = tag;
     }
 
     template <typename T>
     auto const& get_payload() const {
       return reinterpret_cast<typename T::return_type const&>(
-        buffer_[packed::payload_offset()]
+        buffer[packed::payload_offset()]
       );
     }
 
@@ -94,7 +94,7 @@ namespace nocopy {
 
   public:
     // I'd make this private, but then this wouldn't technically be an aggregate
-    alignas(alignment()) std::array<unsigned char, size()> buffer_;
+    alignas(alignment()) std::array<unsigned char, size()> buffer;
   };
 
   template <typename ...Ts>
