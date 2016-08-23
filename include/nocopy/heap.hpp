@@ -51,39 +51,31 @@ namespace nocopy { namespace detail {
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
     template <typename T, bool is_single>
-    struct reference {};
+    struct reference;
+
+    NOCOPY_FIELD(offset_field, Offset);
+    NOCOPY_FIELD(count_field, Offset);
 
     template <typename T>
-    struct reference<T, true> {
+    struct reference<T, true> : datapack<offset_field> {
       // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
-      explicit operator Offset() const { return offset_; }
+      explicit operator Offset() const { return this->template get<offset_field>(); }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
-    private:
-      friend class heap;
-      reference(Offset offset) : offset_{offset} {}
-      Offset offset_;
     };
 
     template <typename T>
-    struct reference<T, false> {
+    struct reference<T, false> : datapack<offset_field, count_field> {
       // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
-      explicit operator Offset() const { return offset_; }
+      explicit operator Offset() const { return this->template get<offset_field>(); }
       auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T const>{t, static_cast<index_type>(count_)};
+        return gsl::span<T const>{t, static_cast<index_type>(this->template get<count_field>())};
       }
       auto deref(T* t) {
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T>{t, static_cast<index_type>(count_)};
+        return gsl::span<T>{t, static_cast<index_type>(this->template get<count_field>())};
       }
-    private:
-      friend class heap;
-      reference(Offset offset, Offset count) : offset_{offset}, count_{count} {
-        assert(count_ > 0);
-      }
-      Offset offset_;
-      Offset count_;
     };
 
   public:
@@ -123,7 +115,9 @@ namespace nocopy { namespace detail {
       return malloc_helper(
         sizeof(T)
       , [&callback](Offset offset) {
-          return callback(single_reference<T>{offset});
+          single_reference<T> ref;
+          ref.template get<offset_field>() = offset;
+          return callback(ref);
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
@@ -136,7 +130,10 @@ namespace nocopy { namespace detail {
       return malloc_helper(
         sizeof(T) * count
       , [&callback, count](Offset offset) {
-          return callback(range_reference<T>{offset, count});
+          range_reference<T> ref;
+          ref.template get<offset_field>() = offset;
+          ref.template get<count_field>() = count;
+          return callback(ref);
         }
       , [&callback](std::error_code e) { return callback(e); }
       );

@@ -8,7 +8,7 @@
 
 namespace nocopy {
   template <typename ...Fields>
-  class datapack final {
+  class datapack {
     using fieldpack = detail::field_packer<detail::field_traits<Fields>...>;
   public:
     static constexpr auto alignment() { return fieldpack::alignment; }
