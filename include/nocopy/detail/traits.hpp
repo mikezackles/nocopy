@@ -71,8 +71,27 @@ namespace nocopy {
     using find_return_type_t = typename find_return_type<FieldType>::type;
 
     template <typename T>
+    struct check_exists { using type = void; };
+    template <typename T, typename = void>
+    struct custom_base_type { using type = T; };
+    template <typename T>
+    struct custom_base_type<
+      T, typename check_exists<typename T::base_type>::type
+    > {
+      static_assert(
+        std::is_base_of<typename T::base_type, T>::value
+      , "declared base class must actually be a base class"
+      );
+      static_assert(
+        sizeof(T) == sizeof(typename T::base_type)
+      , "base class must be same size as derived class"
+      );
+      using type = typename T::base_type;
+    };
+
+    template <typename T>
     struct find_base_type {
-      using type = T;
+      using type = typename custom_base_type<T>::type;
     };
     template <typename FieldType, std::size_t Count>
     struct find_base_type<array<FieldType, Count>> {

@@ -50,14 +50,15 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
-    template <typename T, bool is_single>
-    struct reference;
-
     NOCOPY_FIELD(offset_field, Offset);
     NOCOPY_FIELD(count_field, Offset);
 
+    template <typename T, bool is_single>
+    struct reference;
+
     template <typename T>
     struct reference<T, true> : datapack<offset_field> {
+      using base_type = datapack<offset_field>;
       // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
       explicit operator Offset() const { return this->template get<offset_field>(); }
       constexpr T const& deref(T const* t) const { return *t; }
@@ -66,6 +67,7 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     struct reference<T, false> : datapack<offset_field, count_field> {
+      using base_type = datapack<offset_field, count_field>;
       // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
       explicit operator Offset() const { return this->template get<offset_field>(); }
       auto deref(T const* t) const {
