@@ -23,6 +23,10 @@ namespace nocopy { namespace detail {
       explicit operator Offset() const { return this->template get<offset_field>(); }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
+    private:
+      // This doesn't prevent client code from instantiating in all cases, but it helps clarify intent.
+      friend class reference;
+      reference_impl() = default;
     };
 
     template <typename T>
@@ -37,9 +41,14 @@ namespace nocopy { namespace detail {
         using index_type = typename gsl::span<T const>::index_type;
         return gsl::span<T>{t, static_cast<index_type>(this->template get<count_field>())};
       }
+    private:
+      // This doesn't prevent client code from instantiating in all cases, but it helps clarify intent.
+      friend class reference;
+      reference_impl() = default;
     };
 
   public:
+    // These types should not be instantiated manually! Use create_single and create_range instead.
     template <typename T, bool is_single>
     using generic = reference_impl<T, is_single>;
 
