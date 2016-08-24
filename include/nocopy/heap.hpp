@@ -59,7 +59,6 @@ namespace nocopy { namespace detail {
     template <typename T>
     struct reference<T, true> : datapack<offset_field> {
       using base_type = datapack<offset_field>;
-      // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
       explicit operator Offset() const { return this->template get<offset_field>(); }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
@@ -68,7 +67,6 @@ namespace nocopy { namespace detail {
     template <typename T>
     struct reference<T, false> : datapack<offset_field, count_field> {
       using base_type = datapack<offset_field, count_field>;
-      // TODO - This is to make the existing test work. This should be eliminated in favor of serialize.
       explicit operator Offset() const { return this->template get<offset_field>(); }
       auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
