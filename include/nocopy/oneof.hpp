@@ -6,6 +6,7 @@
 
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
+#include <nocopy/detail/narrow_cast.hpp>
 #include <nocopy/detail/oneof_packer.hpp>
 
 #include <cassert>
@@ -66,7 +67,7 @@ namespace nocopy {
     auto& get() {
       static_assert(packed::template is_allowed<detail::field_traits<T>>()
       , "a union cannot contain a type not in the union");
-      set_tag(packed::template tag_for_type<detail::field_traits<T>>());
+      set_tag(detail::narrow_cast<Tag>(packed::template tag_for_type<detail::field_traits<T>>()));
       return get_payload<detail::field_traits<T>>();
     }
   private:
