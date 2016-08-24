@@ -5,7 +5,7 @@
 
 namespace nocopy { namespace detail {
   template <typename To, typename From>
-  constexpr std::enable_if_t<(sizeof(From) > sizeof(To)) && std::is_integral<To>::value && std::is_integral<From>::value, To>
+  constexpr std::enable_if_t<(sizeof(From) >= sizeof(To)) && std::is_integral<To>::value && std::is_integral<From>::value, To>
   narrow_cast(From from) {
     return static_cast<To>(
       static_cast<std::make_unsigned_t<From>>(from) & (static_cast<std::make_unsigned_t<To>>(-1))
@@ -13,7 +13,7 @@ namespace nocopy { namespace detail {
   }
 
   template <typename To, typename From>
-  constexpr std::enable_if_t<sizeof(From) == sizeof(To) && std::is_integral<To>::value && std::is_integral<From>::value, To>
+  constexpr std::enable_if_t<sizeof(From) < sizeof(To) && std::is_integral<To>::value && std::is_integral<From>::value, To>
   narrow_cast(From from) {
     return from;
   }
