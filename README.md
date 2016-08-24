@@ -266,12 +266,13 @@ relatively strict C++14 compliance. As such, nocopy is limited to the platforms
 on which Boost.Hana compiles (current versions of gcc or clang, including
 clang-cl). For now, my tests are limited to these two compilers on Arch Linux.
 
-Assumptions
+Assumptions/Caveats
 -
 
 * std::array is POD and `sizeof(std::array<unsigned char, N>) == N`
-* floating point numbers are in IEEE 754 format, float contains 32 bits, and
- double contains 64 bits
+* floating point numbers are in IEEE 754 format, `float` contains 32 bits, and
+ `double` contains 64 bits
+* `long double` is not supported
 
 `nocopy` does its best to check assumptions at compile time, so if for some reason
 your platform is not compatible, your code should fail to compile. Note that
@@ -318,8 +319,6 @@ For the Future
 -
 
 * Dump to JSON
-* Consider converting exotic floating point implementations to IEEE 754 using a
-  boxing approach similar to that used for endianness.
 * Investigate supporting [Brigand](https://github.com/edouarda/brigand) as an
   alternative to Boost.Hana.
 * Stack allocation
