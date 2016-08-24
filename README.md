@@ -321,9 +321,11 @@ For the Future
 * Dump to JSON
 * Investigate supporting [Brigand](https://github.com/edouarda/brigand) as an
   alternative to Boost.Hana.
-* Stack allocation
 * Framing
 * Consider a migration-like schema instead of version ranges
-* Consider migrating heap corruption test to
-  [rapidcheck](https://github.com/emil-e/rapidcheck)
 * Cascading deletes for heap references
+
+License
+-
+
+`nocopy` is distributed under the [Apache License, Version 2.0](LICENSE.txt)
