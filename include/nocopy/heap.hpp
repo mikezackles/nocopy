@@ -4,16 +4,12 @@
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>
+#include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/box.hpp>
 #include <nocopy/datapack.hpp>
 #include <nocopy/field.hpp>
 #include <nocopy/errors.hpp>
-
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
-#include <span.h>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
 #include <cassert>
 #include <tuple>
@@ -50,42 +46,18 @@ namespace nocopy { namespace detail {
 
     static constexpr Offset initial_bookkeeping = 3 * block_header_size;
 
-    NOCOPY_FIELD(offset_field, Offset);
-    NOCOPY_FIELD(count_field, Offset);
+    using reference = detail::reference<Offset>;
 
     template <typename T, bool is_single>
-    struct reference;
-
-    template <typename T>
-    struct reference<T, true> : datapack<offset_field> {
-      using base_type = datapack<offset_field>;
-      explicit operator Offset() const { return this->template get<offset_field>(); }
-      constexpr T const& deref(T const* t) const { return *t; }
-      constexpr T& deref(T* t) { return *t; }
-    };
-
-    template <typename T>
-    struct reference<T, false> : datapack<offset_field, count_field> {
-      using base_type = datapack<offset_field, count_field>;
-      explicit operator Offset() const { return this->template get<offset_field>(); }
-      auto deref(T const* t) const {
-        using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T const>{t, static_cast<index_type>(this->template get<count_field>())};
-      }
-      auto deref(T* t) {
-        using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T>{t, static_cast<index_type>(this->template get<count_field>())};
-      }
-    };
-
+    using generic_reference = typename reference::template generic<T, is_single>;
   public:
     using offset_t = Offset; // for client code
 
     template <typename T>
-    using single_reference = reference<T, true>;
+    using single_reference = typename reference::template single<T>;
 
     template <typename T>
-    using range_reference = reference<T, false>;
+    using range_reference = typename reference::template range<T>;
 
     template <typename ...Args>
     static auto create(Args... args) noexcept {
@@ -98,12 +70,12 @@ namespace nocopy { namespace detail {
     }
 
     template <typename T, bool Unused>
-    decltype(auto) deref(reference<T, Unused> const ref) const noexcept {
+    decltype(auto) deref(generic_reference<T, Unused> const ref) const noexcept {
       auto offset = static_cast<Offset>(ref);
       return ref.deref(reinterpret_cast<T const*>(&buffer_[offset]));
     }
     template <typename T, bool Unused>
-    decltype(auto) deref(reference<T, Unused> ref) noexcept {
+    decltype(auto) deref(generic_reference<T, Unused> ref) noexcept {
       auto offset = static_cast<Offset>(ref);
       return ref.deref(reinterpret_cast<T*>(&buffer_[offset]));
     }
@@ -115,9 +87,7 @@ namespace nocopy { namespace detail {
       return malloc_helper(
         sizeof(T)
       , [&callback](Offset offset) {
-          single_reference<T> ref;
-          ref.template get<offset_field>() = offset;
-          return callback(ref);
+          return callback(reference::template create_single<T>(offset));
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
@@ -130,17 +100,14 @@ namespace nocopy { namespace detail {
       return malloc_helper(
         sizeof(T) * count
       , [&callback, count](Offset offset) {
-          range_reference<T> ref;
-          ref.template get<offset_field>() = offset;
-          ref.template get<count_field>() = count;
-          return callback(ref);
+          return callback(reference::template create_range<T>(offset, count));
         }
       , [&callback](std::error_code e) { return callback(e); }
       );
     }
 
     template <typename T, bool Unused>
-    void free(reference<T, Unused> ref) noexcept {
+    void free(generic_reference<T, Unused> ref) noexcept {
       auto offset = static_cast<Offset>(ref);
       assert(0 < offset && offset < size_);
       auto& block = get_header(offset - block_header_size);
