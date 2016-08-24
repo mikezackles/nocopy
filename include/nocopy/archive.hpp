@@ -3,7 +3,9 @@
 
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
+#include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
+#include <nocopy/errors.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
@@ -71,16 +73,16 @@ namespace nocopy {
 
   private:
     template <typename T, typename Success, typename Error>
-    auto alloc_helper(std::size_t count, Success&& success, Error&& error) noexcept {
+    auto alloc_helper(std::size_t count, Success&& success_callback, Error&& error_callback) noexcept {
       detail::assert_valid_type<T>();
       cursor_ = detail::align_to(cursor_, detail::alignment_for<T>());
       auto size = sizeof(T) * count;
       if (capacity_ - cursor_ < size) {
-        return error(make_error_code(error::out_of_space));
+        return error_callback(make_error_code(error::out_of_space));
       } else {
         auto addr = cursor_;
         cursor_ += size;
-        return success(offset, count);
+        return success_callback(addr, count);
       }
     }
 

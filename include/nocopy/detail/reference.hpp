@@ -1,6 +1,7 @@
 #ifndef UUID_8C407DD4_C61B_497E_B9A4_26FB85D27BFC
 #define UUID_8C407DD4_C61B_497E_B9A4_26FB85D27BFC
 
+#include <nocopy/datapack.hpp>
 #include <nocopy/field.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
