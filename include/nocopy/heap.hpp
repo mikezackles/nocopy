@@ -70,12 +70,12 @@ namespace nocopy { namespace detail {
     }
 
     template <typename T, bool Unused>
-    decltype(auto) deref(generic_reference<T, Unused> const ref) const noexcept {
+    decltype(auto) deref(generic_reference<T, Unused> const& ref) const noexcept {
       auto offset = static_cast<Offset>(ref);
       return ref.deref(reinterpret_cast<T const*>(&buffer_[offset]));
     }
     template <typename T, bool Unused>
-    decltype(auto) deref(generic_reference<T, Unused> ref) noexcept {
+    decltype(auto) deref(generic_reference<T, Unused>& ref) noexcept {
       auto offset = static_cast<Offset>(ref);
       return ref.deref(reinterpret_cast<T*>(&buffer_[offset]));
     }
