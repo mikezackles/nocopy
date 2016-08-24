@@ -5,14 +5,7 @@
 #include <cstring>
 #include <type_traits>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
-#include <boost/hana/core/when.hpp>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
-
 namespace nocopy { namespace detail {
-  namespace hana = boost::hana;
-
   constexpr bool optimize_little_endian() {
   #ifdef NOCOPY_OPTIMIZE_LITTLE_ENDIAN
     return true;
@@ -21,7 +14,7 @@ namespace nocopy { namespace detail {
   #endif
   }
 
-  template <typename Scalar, typename = hana::when<true>>
+  template <typename Scalar, typename = void>
   struct little_endian {
     static_assert(sizeof(Scalar) > 1 && optimize_little_endian(), "little-endian optimized code instantiated erroneously");
 
@@ -65,7 +58,7 @@ namespace nocopy { namespace detail {
   using converter_t = converter<Scalar, sizeof(Scalar) - 1>;
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<!std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
+  struct little_endian<Scalar, std::enable_if_t<!std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
       return converter_t<Scalar>::load(source);
@@ -85,7 +78,7 @@ namespace nocopy { namespace detail {
   template <std::size_t Size> using get_proxy_t = typename get_proxy<Size>::type;
 
   template <typename Scalar>
-  struct little_endian<Scalar, hana::when<std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
+  struct little_endian<Scalar, std::enable_if_t<std::is_floating_point<Scalar>::value && !optimize_little_endian()>> {
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     using proxy_type = get_proxy_t<sizeof(Scalar)>;
     static Scalar load(byte_array const& source) {
