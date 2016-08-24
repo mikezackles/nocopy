@@ -3,6 +3,7 @@
 
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
+#include <nocopy/detail/narrow_cast.hpp>
 #include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/errors.hpp>
@@ -11,6 +12,9 @@
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <span.h>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+
+#include <algorithm>
+#include <cassert>
 
 namespace nocopy {
   template <typename Offset>
@@ -53,6 +57,58 @@ namespace nocopy {
         }
       , callback
       );
+    }
+
+    template <typename T, typename ...Callbacks>
+    auto add(T const& t, Callbacks... callbacks) noexcept {
+      auto callback = detail::make_overload(std::move(callbacks)...);
+      return alloc<T>(
+        [=](auto& ref) {
+          this->deref(ref) = t;
+          return callback(ref);
+        }
+      , callback
+      );
+    }
+
+    template <typename T, typename ...Callbacks>
+    auto add(gsl::span<T> data, Callbacks... callbacks) noexcept {
+      auto callback = detail::make_overload(std::move(callbacks)...);
+      return alloc_range<T>(
+        data.length()
+      , [=](auto& ref) {
+          std::copy(data.cbegin(), data.cend(), this->deref(ref).begin());
+          return callback(ref);
+        }
+      , callback
+      );
+    }
+
+    template <typename ...Callbacks>
+    auto add(char const* str, Offset len, Callbacks... callbacks) {
+      using span = gsl::span<char const>;
+      static_assert(sizeof(Offset) <= sizeof(typename span::index_type)
+      , "offset type is too large");
+      assert(str != nullptr);
+      auto callback = detail::make_overload(std::move(callbacks)...);
+      // narrow_cast is necessary because we're using unsigned types, and
+      // gsl::span uses a signed index type
+      auto in = span{str, detail::narrow_cast<typename span::index_type>(len)};
+      return alloc_range<char const>(
+        len + 1
+      , [=](auto& ref) {
+          auto& data = this->deref(ref);
+          std::copy(in.cbegin(), in.cend(), data.begin());
+          data[len] = '\0';
+          return callback(ref);
+        }
+      , callback
+      );
+    }
+
+    template <typename ...Callbacks>
+    auto add(std::string const& str, Callbacks... callbacks) {
+      return this->add(str.c_str(), str.length(), callbacks...);
     }
 
     template <typename T, bool Unused>
