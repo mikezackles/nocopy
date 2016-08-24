@@ -212,7 +212,9 @@ Dynamic Memory ([`nocopy::heap`](test/heap.cpp))
 Right now this is mostly a proof of concept, but `nocopy` includes a very basic
 heap implementation (not thread safe). So, for example, one system could create
 a heap inside a buffer, send the buffer to another system, and that system could
-then edit it directly. Please let me know if you find interesting use cases.
+then edit it directly. At some point I'd like to make heap reference deletes
+cascade, in that deleting a reference owning other references would
+automatically trigger the children's deletion.
 
 For variable byte size heap support, make sure to set the AssumeSameSizedByte
 template parameter to false (divides the maximum heap size by `CHAR_BIT`).
@@ -325,3 +327,4 @@ For the Future
 * Consider a migration-like schema instead of version ranges
 * Consider migrating heap corruption test to
   [rapidcheck](https://github.com/emil-e/rapidcheck)
+* Cascading deletes for heap references
