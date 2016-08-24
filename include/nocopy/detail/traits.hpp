@@ -6,11 +6,6 @@
 #include <nocopy/fwd/field.hpp>
 #include <nocopy/fwd/oneof.hpp>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
-#include <boost/hana/core/when.hpp>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
-
 #include <array>
 #include <climits>
 #include <cstdint>
@@ -18,8 +13,6 @@ END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 
 namespace nocopy {
   namespace detail {
-    namespace hana = boost::hana;
-
     template <typename T>
     struct is_datapack {
       static constexpr bool value = false;
@@ -38,12 +31,12 @@ namespace nocopy {
       static constexpr bool value = true;
     };
 
-    template <typename T, typename = hana::when<true>>
+    template <typename T, typename = void>
     struct boxer {
       using type = T;
     };
     template <typename T>
-    struct boxer<T, hana::when<std::is_scalar<T>::value && (sizeof(T) > 1)>> {
+    struct boxer<T, std::enable_if_t<std::is_scalar<T>::value && (sizeof(T) > 1)>> {
       using type = box<T>;
     };
     template <typename T>
@@ -105,12 +98,12 @@ namespace nocopy {
     template <typename FieldType>
     using find_base_t = typename find_base_type<FieldType>::type;
 
-    template <typename T, typename = hana::when<true>>
+    template <typename T, typename = void>
     struct find_alignment {
       static constexpr std::size_t result = T::alignment();
     };
     template <typename T>
-    struct find_alignment<T, hana::when<std::is_scalar<T>::value>> {
+    struct find_alignment<T, std::enable_if_t<std::is_scalar<T>::value>> {
       static constexpr std::size_t result = sizeof(T);
     };
 
