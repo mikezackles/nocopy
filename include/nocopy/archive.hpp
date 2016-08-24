@@ -85,14 +85,13 @@ namespace nocopy {
     }
 
     template <typename ...Callbacks>
-    auto add(char const* str, Offset len, Callbacks... callbacks) {
+    auto add(char const* str, std::size_t len, Callbacks... callbacks) {
       using span = gsl::span<char const>;
       static_assert(sizeof(Offset) <= sizeof(typename span::index_type)
       , "offset type is too large");
       assert(str != nullptr);
       auto callback = detail::make_overload(std::move(callbacks)...);
-      // narrow_cast is necessary because we're using unsigned types, and
-      // gsl::span uses a signed index type
+      // narrow_cast is necessary because gsl::span uses a signed index type
       auto in = span{str, detail::narrow_cast<typename span::index_type>(len)};
       return alloc_range<char const>(
         len + 1
