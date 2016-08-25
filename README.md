@@ -219,9 +219,6 @@ automatically trigger the children's deletion.
 For variable byte size heap support, make sure to set the AssumeSameSizedByte
 template parameter to false (divides the maximum heap size by `CHAR_BIT`).
 
-Note that a higher level interface may be forthcoming, but for now, clients must
-manage heap allocations manually.
-
 ```c++
 #include <nocopy.hpp>
 
@@ -269,7 +266,7 @@ clang-cl). For now, my tests are limited to these two compilers on Arch Linux.
 Assumptions/Caveats
 -
 
-* std::array is POD and `sizeof(std::array<unsigned char, N>) == N`
+* `sizeof(std::array<unsigned char, N>) == N`
 * floating point numbers are in IEEE 754 format, `float` contains 32 bits, and
  `double` contains 64 bits
 * `long double` is not supported
