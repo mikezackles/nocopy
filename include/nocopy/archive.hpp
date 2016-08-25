@@ -123,9 +123,12 @@ namespace nocopy {
       return ref.deref(reinterpret_cast<T*>(&buffer_[offset]));
     }
 
-    template <typename Callback>
-    auto get_data(Callback&& callback) const {
-      return callback(gsl::span<unsigned char>{buffer_, cursor_});
+    char const* get_string(range_reference<char const> const& ref) const noexcept {
+      return this->deref(ref).data();
+    }
+
+    auto data() const {
+      return gsl::span<unsigned char>{buffer_, cursor_};
     }
 
   private:
