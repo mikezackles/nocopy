@@ -1,6 +1,8 @@
 #ifndef UUID_06CEC703_2131_48E7_BC79_F84A9F0F44BB
 #define UUID_06CEC703_2131_48E7_BC79_F84A9F0F44BB
 
+#include <nocopy/fwd/archive.hpp>
+
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>

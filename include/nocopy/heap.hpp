@@ -1,6 +1,8 @@
 #ifndef UUID_45019CBC_4F2E_47AC_9952_EEAB055B6EEB
 #define UUID_45019CBC_4F2E_47AC_9952_EEAB055B6EEB
 
+#include <nocopy/fwd/heap.hpp>
+
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>

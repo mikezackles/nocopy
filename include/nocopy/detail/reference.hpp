@@ -1,6 +1,9 @@
 #ifndef UUID_8C407DD4_C61B_497E_B9A4_26FB85D27BFC
 #define UUID_8C407DD4_C61B_497E_B9A4_26FB85D27BFC
 
+#include <nocopy/fwd/archive.hpp>
+#include <nocopy/fwd/heap.hpp>
+
 #include <nocopy/datapack.hpp>
 #include <nocopy/field.hpp>
 
@@ -48,7 +51,6 @@ namespace nocopy { namespace detail {
       reference_impl() = default;
     };
 
-  public:
     // These types should not be instantiated manually! Use create_single and create_range instead.
     template <typename T, bool is_single>
     using generic = reference_impl<T, is_single>;
@@ -73,6 +75,11 @@ namespace nocopy { namespace detail {
       ref.template get<count_field>() = count;
       return ref;
     }
+
+    template <typename, typename, bool>
+    friend class ::nocopy::detail::heap;
+    template <typename>
+    friend class ::nocopy::archive;
   };
 }}
 
