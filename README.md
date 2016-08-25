@@ -1,7 +1,7 @@
 Overview
 -
 
-`nocopy` is a header-only library that aims to provide a simple, type-safe,
+`nocopy` is a header-only library that aims to provide a type-safe,
 compile-time, zero-copy solution to serialization. As of this writing, the
 [`include`](include/) directory contains less than 1500 lines of code.
 
@@ -69,18 +69,19 @@ int result = some_nocopy_function(
 std::cout << "result is " << result << std::endl;
 ```
 
-Structs ([`nocopy::datapack`](test/datapack.cpp))
+Structs ([`nocopy::structpack`](test/structpack.cpp))
 -
 
-`nocopy` datapacks are essentially traditional packed structs, but the packing
+`nocopy` structpacks are essentially traditional packed structs, but the packing
 is performed automatically at compile time. Scalar types are aligned to their
-size, and datapack fields are sorted by alignment from largest to smallest.
+size, and structpack fields are sorted by alignment from largest to smallest.
 Because these alignments are all guaranteed to be powers of two, smaller
-alignments divide larger ones. This ensures that if the datapack itself is
+alignments divide larger ones. This ensures that if the structpack itself is
 aligned to the alignment of the largest field, all its members are aligned.
-Padding is inserted to align the end of the datapack with the largest alignment
-it contains. This ensures that datapacks can contain other datapacks as nested
-fields without affecting the alignment of subsequent fields.
+Padding is inserted to align the end of the structpack with the largest
+alignment it contains. This ensures that structpacks can contain other
+structpacks as nested fields without affecting the alignment of subsequent
+fields.
 
 ```c++
 #include <nocopy.hpp>
@@ -93,13 +94,13 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::datapack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta, first, second, coords, locations>;
 };
 
 struct experiment {
   NOCOPY_FIELD(measure1, measurement::type);
   NOCOPY_FIELD(more_measurements, NOCOPY_ARRAY(measurement::type, 5));
-  using type = nocopy::datapack<measure1, more_measurements>;
+  using type = nocopy::structpack<measure1, more_measurements>;
 };
 
 int main() {
@@ -174,7 +175,7 @@ int main() {
 The field type is passed as the first argument to the visitor to allow for
 unions that contain the same type under a different name.
 
-Versioning ([`nocopy::schema_t`](test/archive.cpp))
+Versioning ([`nocopy::schema`](test/schema.cpp))
 -
 
 ```c++
@@ -192,8 +193,8 @@ struct measurement {
   //        field added in this version  |
   template <std::size_t Version> //   |  |
   using type = //                     |  |
-  nocopy::schema_t< //                |  |
-    nocopy::datapack //               |  |
+  nocopy::schema< //                  |  |
+    nocopy::structpack //             |  |
   , Version //                        v  v
   , nocopy::version_range< delta,     0    >
   , nocopy::version_range< first,     0, 1 >
@@ -229,7 +230,7 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::datapack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta, first, second, coords, locations>;
 };
 
 int main() {
@@ -269,17 +270,17 @@ Assumptions/Caveats
 * `sizeof(std::array<unsigned char, N>) == N`
 * floating point numbers are in IEEE 754 format, `float` contains 32 bits, and
  `double` contains 64 bits
-* `long double` is not supported
+* `long double` fields are not supported
 
-`nocopy` does its best to check assumptions at compile time, so if for some reason
-your platform is not compatible, your code should fail to compile. Note that
-features that are not used are not checked, so for example if you intend to
+`nocopy` does its best to check assumptions at compile time, so if for some
+reason your platform is not compatible, your code should fail to compile. Note
+that features that are not used are not checked, so for example if you intend to
 support platforms with exotic floating point implementations, you can still
 compile if your code contains no floating point fields.
 
-Note that `CHAR_BIT == 8` is *not* an assumption, so as of now, nocopy attempts
-to support platforms where a byte contains more than 8 bits. For now this
-support is theoretical as I have no such hardware on which to test.
+Note that `CHAR_BIT == 8` is *not* an assumption, so as of now, `nocopy`
+attempts to support platforms where a byte contains more than 8 bits. For now
+this support is theoretical as I have no such hardware on which to test.
 
 Strict Aliasing
 -
@@ -308,7 +309,7 @@ conversion regardless of platform if you aren't worried about portability.
 Disclaimer
 -
 
-This project is still in flux, and although it aims to generate a stable,
+**This project is still in flux**, and although it aims to generate a stable,
 portable binary encoding, it may still fall short of that goal. Use at your own
 risk, and please report bugs!
 
@@ -320,7 +321,7 @@ For the Future
   alternative to Boost.Hana.
 * Framing
 * Consider a migration-like schema instead of version ranges
-* Cascading deletes for heap references
+* Consider simulated constructors/destructors for dynamic allocations
 
 License
 -

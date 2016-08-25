@@ -9,7 +9,7 @@
 #include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/box.hpp>
-#include <nocopy/datapack.hpp>
+#include <nocopy/structpack.hpp>
 #include <nocopy/field.hpp>
 #include <nocopy/errors.hpp>
 
@@ -36,7 +36,7 @@ namespace nocopy { namespace detail {
       NOCOPY_FIELD(prev, Offset);
       NOCOPY_FIELD(next_free, Offset);
       NOCOPY_FIELD(prev_free, Offset);
-      using type = datapack<size, prev, next_free, prev_free>;
+      using type = structpack<size, prev, next_free, prev_free>;
     };
     using block_header_t = typename block_header::type;
     static constexpr Offset block_header_size = detail::narrow_cast<Offset>(

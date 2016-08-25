@@ -3,7 +3,7 @@
 
 namespace nocopy {
   template <typename ...Fields>
-  class datapack;
+  class structpack;
 }
 
 #endif

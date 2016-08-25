@@ -2,7 +2,7 @@
 #define UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 
 #include <nocopy/fwd/box.hpp>
-#include <nocopy/fwd/datapack.hpp>
+#include <nocopy/fwd/structpack.hpp>
 #include <nocopy/fwd/field.hpp>
 #include <nocopy/fwd/oneof.hpp>
 
@@ -14,11 +14,11 @@
 namespace nocopy {
   namespace detail {
     template <typename T>
-    struct is_datapack {
+    struct is_structpack {
       static constexpr bool value = false;
     };
     template <typename ...Ts>
-    struct is_datapack<datapack<Ts...>> {
+    struct is_structpack<structpack<Ts...>> {
       static constexpr bool value = true;
     };
 
@@ -27,7 +27,7 @@ namespace nocopy {
       static constexpr bool value = false;
     };
     template <typename ...Ts>
-    struct is_datapack<oneof<Ts...>> {
+    struct is_structpack<oneof<Ts...>> {
       static constexpr bool value = true;
     };
 
@@ -114,7 +114,7 @@ namespace nocopy {
     template <typename BaseType>
     constexpr bool is_valid_base_type() {
       return
-           is_datapack<BaseType>::value
+           is_structpack<BaseType>::value
         || (std::is_same<BaseType, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) * CHAR_BIT == 32)
         || (std::is_same<BaseType, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) * CHAR_BIT == 64)
         || std::is_same<BaseType, char>::value

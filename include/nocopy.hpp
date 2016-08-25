@@ -3,7 +3,7 @@
 
 #include <nocopy/archive.hpp>
 #include <nocopy/box.hpp>
-#include <nocopy/datapack.hpp>
+#include <nocopy/structpack.hpp>
 #include <nocopy/field.hpp>
 #include <nocopy/heap.hpp>
 #include <nocopy/oneof.hpp>

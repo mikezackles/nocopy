@@ -9,23 +9,23 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::datapack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta, first, second, coords, locations>;
 };
 using measurement_t = measurement::type;
 
 struct experiment {
   NOCOPY_FIELD(measure1, measurement_t);
   NOCOPY_FIELD(more_measurements, NOCOPY_ARRAY(measurement_t, 5));
-  using type = nocopy::datapack<measure1, more_measurements>;
+  using type = nocopy::structpack<measure1, more_measurements>;
 };
 using experiment_t = experiment::type;
 
-SCENARIO("datapack") {
-  GIVEN("a datapack-sized buffer of garbage data") {
+SCENARIO("structpack") {
+  GIVEN("a structpack-sized buffer of garbage data") {
     std::array<uint8_t, sizeof(measurement_t)> buffer;
     buffer.fill(1);
 
-    WHEN("a default-initialized datapack is constructed from the buffer") {
+    WHEN("a default-initialized structpack is constructed from the buffer") {
       auto measurep = new (&buffer) measurement_t;
 
       THEN("the data is still garbage") {
@@ -33,7 +33,7 @@ SCENARIO("datapack") {
       }
     }
 
-    WHEN("a zero-initialized datapack is constructed from the buffer") {
+    WHEN("a zero-initialized structpack is constructed from the buffer") {
       auto measurep = new (&buffer) measurement_t();
 
       THEN("the data is zeroed") {
@@ -41,7 +41,7 @@ SCENARIO("datapack") {
       }
     }
 
-    WHEN("a value-initialized datapack is constructed from the buffer") {
+    WHEN("a value-initialized structpack is constructed from the buffer") {
       auto measurep = new (&buffer) measurement_t{};
 
       THEN("the data is zeroed") {
@@ -50,7 +50,7 @@ SCENARIO("datapack") {
     }
   }
 
-  GIVEN("an initialized datapack") {
+  GIVEN("an initialized structpack") {
     measurement_t measured{};
     measured.get<measurement::delta>() = 0.5;
     measured.get<measurement::first>() = 1001;
@@ -111,7 +111,7 @@ SCENARIO("datapack") {
     }
   }
 
-  GIVEN("a datapack with nested datapacks") {
+  GIVEN("a structpack with nested structpacks") {
     experiment_t exp{};
 
     exp.get<experiment::measure1>().get<measurement::second>() = 5;

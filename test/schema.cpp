@@ -14,8 +14,8 @@ struct measurement {
   //        field added in this version  |
   template <std::size_t Version> //   |  |
   using type = //                     |  |
-  nocopy::schema_t< //                |  |
-    nocopy::datapack //               |  |
+  nocopy::schema< //                  |  |
+    nocopy::structpack //             |  |
   , Version //                        v  v
   , nocopy::version_range< delta,     0    >
   , nocopy::version_range< first,     0, 1 >

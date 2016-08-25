@@ -1,14 +1,14 @@
 #ifndef UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 #define UUID_DF22E38D_D570_4E32_A815_00BD9BAB708E
 
-#include <nocopy/fwd/datapack.hpp>
+#include <nocopy/fwd/structpack.hpp>
 
 #include <nocopy/detail/field_packer.hpp>
 #include <nocopy/detail/traits.hpp>
 
 namespace nocopy {
   template <typename ...Fields>
-  class datapack {
+  class structpack {
     using fieldpack = detail::field_packer<detail::field_traits<Fields>...>;
   public:
     static constexpr auto alignment() { return fieldpack::alignment; }
@@ -26,7 +26,7 @@ namespace nocopy {
     template <typename Field>
     auto& get() {
       return const_cast<typename detail::field_traits<Field>::return_type&>(
-        static_cast<datapack const&>(*this).template get<Field>()
+        static_cast<structpack const&>(*this).template get<Field>()
       );
     }
 

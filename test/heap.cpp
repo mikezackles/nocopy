@@ -20,7 +20,7 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::datapack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta, first, second, coords, locations>;
 };
 using measurement_t = measurement::type;
 

@@ -4,7 +4,7 @@
 #include <nocopy/fwd/archive.hpp>
 #include <nocopy/fwd/heap.hpp>
 
-#include <nocopy/datapack.hpp>
+#include <nocopy/structpack.hpp>
 #include <nocopy/field.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
@@ -22,8 +22,8 @@ namespace nocopy { namespace detail {
     struct reference_impl;
 
     template <typename T>
-    struct reference_impl<T, true> : datapack<offset_field> {
-      using base_type = datapack<offset_field>;
+    struct reference_impl<T, true> : structpack<offset_field> {
+      using base_type = structpack<offset_field>;
       explicit operator Offset() const { return this->template get<offset_field>(); }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
@@ -34,8 +34,8 @@ namespace nocopy { namespace detail {
     };
 
     template <typename T>
-    struct reference_impl<T, false> : datapack<offset_field, count_field> {
-      using base_type = datapack<offset_field, count_field>;
+    struct reference_impl<T, false> : structpack<offset_field, count_field> {
+      using base_type = structpack<offset_field, count_field>;
       explicit operator Offset() const { return this->template get<offset_field>(); }
       auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
