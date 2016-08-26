@@ -49,25 +49,25 @@ SCENARIO("structpack") {
       auto measurep = new (&buffer) measurement_t{};
 
       THEN("the data is zeroed") {
-        REQUIRE(measurep->get(measurement::second) == 0);
+        REQUIRE((*measurep)[measurement::second] == 0);
       }
     }
   }
 
   GIVEN("an initialized structpack") {
     measurement_t measured{};
-    measured.get(measurement::delta) = 0.5;
-    measured.get(measurement::first) = 1001;
-    measured.get(measurement::second) = 4;
-    measured.get(measurement::coords)[4] = 5;
-    measured.get(measurement::locations)[12] = 42;
+    measured[measurement::delta] = 0.5;
+    measured[measurement::first] = 1001;
+    measured[measurement::second] = 4;
+    measured[measurement::coords][4] = 5;
+    measured[measurement::locations][12] = 42;
 
     THEN("it can be unpacked") {
-      REQUIRE(measured.get(measurement::delta) == Approx(0.5));
-      REQUIRE(measured.get(measurement::first) == 1001);
-      REQUIRE(measured.get(measurement::second) == 4);
-      REQUIRE(measured.get(measurement::coords)[4] == 5);
-      REQUIRE(measured.get(measurement::locations)[12] == 42);
+      REQUIRE(measured[measurement::delta] == Approx(0.5));
+      REQUIRE(measured[measurement::first] == 1001);
+      REQUIRE(measured[measurement::second] == 4);
+      REQUIRE(measured[measurement::coords][4] == 5);
+      REQUIRE(measured[measurement::locations][12] == 42);
     }
 
     THEN("its largest alignment divides its size") {
@@ -75,42 +75,42 @@ SCENARIO("structpack") {
     }
 
     THEN("calling get on a scalar field returns a box reference") {
-      REQUIRE((std::is_same<decltype(measured.get(measurement::first)), nocopy::box<uint32_t>&>::value));
+      REQUIRE((std::is_same<decltype(measured[measurement::first]), nocopy::box<uint32_t>&>::value));
     }
 
     THEN("calling get on an array field returns a std::array reference") {
-      REQUIRE((std::is_same<decltype(measured.get(measurement::coords)), std::array<uint8_t, 10>&>::value));
+      REQUIRE((std::is_same<decltype(measured[measurement::coords]), std::array<uint8_t, 10>&>::value));
     }
 
     THEN("calling get on an array field returns a std::array reference") {
-      REQUIRE((std::is_same<decltype(measured.get(measurement::coords)), std::array<uint8_t, 10>&>::value));
+      REQUIRE((std::is_same<decltype(measured[measurement::coords]), std::array<uint8_t, 10>&>::value));
     }
 
     THEN("calling get on an arraypack field returns an arraypack reference") {
-      REQUIRE((std::is_same<decltype(measured.get(measurement::locations)), std::array<nocopy::box<uint32_t>, 20>&>::value));
+      REQUIRE((std::is_same<decltype(measured[measurement::locations]), std::array<nocopy::box<uint32_t>, 20>&>::value));
     }
 
     WHEN("a const reference is taken") {
       auto const& cmeasured = measured;
 
       THEN("it can be unpacked") {
-        REQUIRE(cmeasured.get(measurement::delta) == Approx(0.5));
-        REQUIRE(cmeasured.get(measurement::first) == 1001);
-        REQUIRE(cmeasured.get(measurement::second) == 4);
-        REQUIRE(cmeasured.get(measurement::coords)[4] == 5);
-        REQUIRE(cmeasured.get(measurement::locations)[12] == 42);
+        REQUIRE(cmeasured[measurement::delta] == Approx(0.5));
+        REQUIRE(cmeasured[measurement::first] == 1001);
+        REQUIRE(cmeasured[measurement::second] == 4);
+        REQUIRE(cmeasured[measurement::coords][4] == 5);
+        REQUIRE(cmeasured[measurement::locations][12] == 42);
       }
 
       THEN("accessing boxed fields returns a const reference") {
-        REQUIRE((std::is_same<decltype(cmeasured.get(measurement::delta)), nocopy::box<float> const&>::value));
+        REQUIRE((std::is_same<decltype(cmeasured[measurement::delta]), nocopy::box<float> const&>::value));
       }
 
       THEN("calling get on an array field returns a const std::array reference") {
-        REQUIRE((std::is_same<decltype(cmeasured.get(measurement::coords)), std::array<uint8_t, 10> const&>::value));
+        REQUIRE((std::is_same<decltype(cmeasured[measurement::coords]), std::array<uint8_t, 10> const&>::value));
       }
 
       THEN("calling get on an arraypack field returns a const arraypack reference") {
-        REQUIRE((std::is_same<decltype(cmeasured.get(measurement::locations)), std::array<nocopy::box<uint32_t>, 20> const&>::value));
+        REQUIRE((std::is_same<decltype(cmeasured[measurement::locations]), std::array<nocopy::box<uint32_t>, 20> const&>::value));
       }
     }
   }
@@ -118,12 +118,12 @@ SCENARIO("structpack") {
   GIVEN("a structpack with nested structpacks") {
     experiment_t exp{};
 
-    exp.get(experiment::measure1).get(measurement::second) = 5;
-    exp.get(experiment::more_measurements)[4].get(measurement::second) = 12;
+    exp[experiment::measure1][measurement::second] = 5;
+    exp[experiment::more_measurements][4][measurement::second] = 12;
 
     THEN("it can be unpacked") {
-      REQUIRE(exp.get(experiment::measure1).get(measurement::second) == 5);
-      REQUIRE(exp.get(experiment::more_measurements)[4].get(measurement::second) == 12);
+      REQUIRE(exp[experiment::measure1][measurement::second] == 5);
+      REQUIRE(exp[experiment::more_measurements][4][measurement::second] == 12);
     }
   }
 }

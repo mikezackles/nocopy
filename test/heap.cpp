@@ -39,7 +39,7 @@ TEST_CASE("deref", "[heap]") {
     }
   );
   auto m = heap.deref(result);
-  m[1].get(measurement::first) = 2000;
+  m[1][measurement::first] = 2000;
   heap.free(result);
 }
 

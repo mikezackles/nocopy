@@ -178,14 +178,14 @@ namespace nocopy {
 
       template <typename Self, typename Callback>
       static bool each_free(Self&& self, Callback&& callback) {
-        Offset offset = self.get_header(list_head_offset).get(block_header::next_free);
+        Offset offset = self.get_header(list_head_offset)[block_header::next_free];
         while (offset != list_head_offset) {
           assert(0 < offset && offset < self.size_);
           auto& block = self.get_header(offset);
           if (callback(block)) {
             return true;
           }
-          offset = block.get(block_header::next_free);
+          offset = block[block_header::next_free];
         }
         return false;
       }
@@ -222,9 +222,9 @@ namespace nocopy {
         new (&buffer_[list_head_offset]) block_header_t{};
         new (&buffer_[first_block_offset]) block_header_t{};
         new (&buffer_[sentinel_offset()]) block_header_t{};
-        list_head().get(block_header::prev_free) = list_head_offset;
-        list_head().get(block_header::next_free) = list_head_offset;
-        first_block().get(block_header::size) = size_ - initial_bookkeeping;
+        list_head()[block_header::prev_free] = list_head_offset;
+        list_head()[block_header::next_free] = list_head_offset;
+        first_block()[block_header::size] = size_ - initial_bookkeeping;
         mark_as_allocated(list_head());
         mark_as_free(first_block());
         mark_as_allocated(sentinel());
@@ -249,22 +249,18 @@ namespace nocopy {
       void add_to_free_list(block_header_t& block) {
         auto& head = list_head();
         auto& next = next_free(head);
-        block.get(block_header::next_free)
-          = head.get(block_header::next_free);
-        block.get(block_header::prev_free)
-          = next.get(block_header::prev_free);
+        block[block_header::next_free] = head[block_header::next_free];
+        block[block_header::prev_free] = next[block_header::prev_free];
         auto block_offset = get_offset(block);
-        head.get(block_header::next_free) = block_offset;
-        next.get(block_header::prev_free) = block_offset;
+        head[block_header::next_free] = block_offset;
+        next[block_header::prev_free] = block_offset;
       }
 
       void remove_from_free_list(block_header_t& block) {
         auto& prev = prev_free(block);
         auto& next = next_free(block);
-        prev.get(block_header::next_free)
-          = block.get(block_header::next_free);
-        next.get(block_header::prev_free)
-          = block.get(block_header::prev_free);
+        prev[block_header::next_free] = block[block_header::next_free];
+        next[block_header::prev_free] = block[block_header::prev_free];
       }
 
       bool trim(block_header_t& block, Offset target_size) {
@@ -274,12 +270,12 @@ namespace nocopy {
         if (target_size > block_size) return false;
         auto remaining_size = block_size - target_size;
         if (remaining_size >= block_header_size) {
-          block.get(block_header::size) = target_size;
+          block[block_header::size] = target_size;
           auto& remainder = next_adjacent(block);
-          remainder.get(block_header::size) = remaining_size - block_header_size;
-          remainder.get(block_header::prev) = get_offset(block);
+          remainder[block_header::size] = remaining_size - block_header_size;
+          remainder[block_header::prev] = get_offset(block);
           auto& next = next_adjacent(remainder);
-          next.get(block_header::prev) = get_offset(remainder);
+          next[block_header::prev] = get_offset(remainder);
           mark_as_free(remainder);
           add_to_free_list(remainder);
         }
@@ -299,27 +295,25 @@ namespace nocopy {
         if (prev_is_free && next_is_free) {
           remove_from_free_list(prev);
           remove_from_free_list(next);
-          prev.get(block_header::size)
+          prev[block_header::size]
             = prev_size + block_header_size + curr_size + block_header_size + next_size;
           mark_as_free(prev);
           auto& new_next = next_adjacent(prev);
-          new_next.get(block_header::prev) = get_offset(prev);
+          new_next[block_header::prev] = get_offset(prev);
           return prev;
         } else if (prev_is_free) {
           remove_from_free_list(prev);
-          prev.get(block_header::size)
-            = prev_size + block_header_size + curr_size;
+          prev[block_header::size] = prev_size + block_header_size + curr_size;
           mark_as_free(prev);
           auto& new_next = next_adjacent(prev);
-          new_next.get(block_header::prev) = get_offset(prev);
+          new_next[block_header::prev] = get_offset(prev);
           return prev;
         } else if (next_is_free) {
           remove_from_free_list(next);
-          block.get(block_header::size)
-            = curr_size + block_header_size + next_size;
+          block[block_header::size] = curr_size + block_header_size + next_size;
           mark_as_free(block);
           auto& new_next = next_adjacent(block);
-          new_next.get(block_header::prev) = get_offset(block);
+          new_next[block_header::prev] = get_offset(block);
           return block;
         } else {
           mark_as_free(block);
@@ -328,14 +322,14 @@ namespace nocopy {
       }
 
       block_header_t const& next_free(block_header_t const& block) const {
-        return get_header(block.get(block_header::next_free));
+        return get_header(block[block_header::next_free]);
       }
       block_header_t& next_free(block_header_t const& block) {
         return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_free(block));
       }
 
       block_header_t const& prev_free(block_header_t const& block) const {
-        return get_header(block.get(block_header::prev_free));
+        return get_header(block[block_header::prev_free]);
       }
       block_header_t& prev_free(block_header_t const& block) {
         return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_free(block));
@@ -351,25 +345,25 @@ namespace nocopy {
       }
 
       block_header_t const& prev_adjacent(block_header_t const& block) const {
-        return get_header(block.get(block_header::prev));
+        return get_header(block[block_header::prev]);
       }
       block_header_t& prev_adjacent(block_header_t const& block) {
         return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_adjacent(block));
       }
 
       static std::tuple<Offset, bool> get_block_size(block_header_t const& block) {
-        Offset s = block.get(block_header::size);
+        Offset s = block[block_header::size];
         Offset size = s & ~Offset{1};
         bool is_free = (s & Offset{1}) == 1;
         return std::make_tuple(size, is_free);
       }
 
       static void mark_as_free(block_header_t& block) {
-        block.get(block_header::size) |= Offset{1};
+        block[block_header::size] |= Offset{1};
       }
 
       static void mark_as_allocated(block_header_t& block) {
-        block.get(block_header::size) &= ~Offset{1};
+        block[block_header::size] &= ~Offset{1};
       }
 
       Offset sentinel_offset() const {

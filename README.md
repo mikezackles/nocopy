@@ -106,15 +106,15 @@ struct experiment {
 int main() {
   experiment::type exp{};
 
-  exp.get(experiment::measure1).get(measurement::second) = 5;
-  exp.get(experiment::more_measurements)[4].get(measurement::second) = 12;
+  exp[experiment::measure1][measurement::second] = 5;
+  exp[experiment::more_measurements][4][measurement::second] = 12;
 
   std::cout
-    << exp.get(experiment::measure1).get(measurement::second)
+    << exp[experiment::measure1][measurement::second]
     << " == 5"
     << std::endl;
   std::cout
-    << exp.get(experiment::more_measurements)[4].get(measurement::second)
+    << exp[experiment::more_measurements][4][measurement::second]
     << " == 12"
     << std::endl;
 
@@ -160,7 +160,7 @@ struct abc {
 
 int main() {
   abc::type instance{};
-  instance.get(abc::a) = 4.5;
+  instance[abc::a] = 4.5;
   instance.visit(
     [](abc::a_t, float val) {
       std::cout << "Val is " << val << " (should be 4.5)" << std::endl;
@@ -254,7 +254,7 @@ int main() {
     }
   );
   auto m = heap.deref(result);
-  m[1].get(measurement::first) = 2000;
+  m[1][measurement::first] = 2000;
   heap.free(result);
   return 0;
 }

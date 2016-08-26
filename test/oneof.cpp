@@ -14,7 +14,7 @@ TEST_CASE("all fields can be set", "[oneof]") {
   abc_t instance{};
 
   SECTION("first field") {
-    instance.get(abc::a) = 4.5;
+    instance[abc::a] = 4.5;
 
     bool a_was_visited = false;
     instance.visit(
@@ -29,7 +29,7 @@ TEST_CASE("all fields can be set", "[oneof]") {
   }
 
   SECTION("second field") {
-    instance.get(abc::b) = 23;
+    instance[abc::b] = 23;
 
     bool b_was_visited = false;
     instance.visit(
@@ -44,7 +44,7 @@ TEST_CASE("all fields can be set", "[oneof]") {
   }
 
   SECTION("third field") {
-    instance.get(abc::c) = 2;
+    instance[abc::c] = 2;
 
     bool c_was_visited = false;
     instance.visit(
@@ -61,7 +61,7 @@ TEST_CASE("all fields can be set", "[oneof]") {
 
 TEST_CASE("visitation lambda order does not matter", "[oneof]") {
   abc_t instance{};
-  instance.get(abc::a) = 4.5;
+  instance[abc::a] = 4.5;
 
   SECTION("visitors are passed in the same order as the fields") {
     bool a_was_visited = false;
@@ -116,7 +116,7 @@ using abcd_t = abcd::type;
 SCENARIO("can contain the same type more than once", "[oneof]") {
   abcd_t instance{};
   SECTION("first repeated type") {
-    instance.get(abcd::b) = 8;
+    instance[abcd::b] = 8;
 
     bool b_was_visited = false;
     instance.visit(
@@ -134,7 +134,7 @@ SCENARIO("can contain the same type more than once", "[oneof]") {
   }
 
   SECTION("second repeated type") {
-    instance.get(abcd::d) = 13;
+    instance[abcd::d] = 13;
 
     bool d_was_visited = false;
     instance.visit(
@@ -155,8 +155,8 @@ SCENARIO("can contain the same type more than once", "[oneof]") {
 SCENARIO("reassignment changes the visited type", "[oneof]") {
   abcd_t instance{};
 
-  instance.get(abcd::b) = 8;
-  instance.get(abcd::a) = 3.14f;
+  instance[abcd::b] = 8;
+  instance[abcd::a] = 3.14f;
 
   bool a_was_visited = false;
   instance.visit(
