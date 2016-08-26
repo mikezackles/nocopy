@@ -13,7 +13,10 @@ namespace nocopy {
   namespace detail {
     namespace hana = boost::hana;
 
-    template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
+    template <
+      template <typename ...> class Result
+    , std::size_t Version
+    , typename ...VersionRanges>
     struct schema_impl {
     private:
       static constexpr auto fields = hana::make_tuple(hana::type_c<VersionRanges>...);
@@ -39,7 +42,7 @@ namespace nocopy {
   }
 
   template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
-  using schema = typename detail::schema_impl<structpack, Version, VersionRanges...>::type;
+  using schema = typename detail::schema_impl<Result, Version, VersionRanges...>::type;
 }
 
 #endif
