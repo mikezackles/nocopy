@@ -69,7 +69,7 @@ int result = some_nocopy_function(
 std::cout << "result is " << result << std::endl;
 ```
 
-Structs ([`nocopy::structpack`](test/structpack.cpp))
+[structpack](test/structpack.cpp)
 -
 
 `nocopy` structpacks are essentially traditional packed structs, but the packing
@@ -140,8 +140,11 @@ them, their definitions are as follows:
 Technically, `field_name::name` is currently unused, but it is intended to
 support JSON dumps.
 
-Unions ([`nocopy::oneof`](test/oneof.cpp))
+[oneof](test/oneof.cpp)
 -
+
+`nocopy::oneof8` and `nocopy::oneof16` are tagged union implementations that use
+8-bit and 16-bit tags, respectively.
 
 ```c++
 #include <nocopy.hpp>
@@ -175,7 +178,7 @@ int main() {
 The field type is passed as the first argument to the visitor to allow for
 unions that contain the same type under a different name.
 
-Versioning ([`nocopy::schema`](test/schema.cpp))
+[schema](test/schema.cpp)
 -
 
 ```c++
@@ -207,7 +210,7 @@ struct measurement {
 measurement::type<3> measurement_v3;
 ```
 
-Dynamic Memory ([`nocopy::heap`](test/heap.cpp))
+[heap](test/heap.cpp)
 -
 
 Right now this is mostly a proof of concept, but `nocopy` includes a very basic
