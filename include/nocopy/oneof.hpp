@@ -70,13 +70,14 @@ namespace nocopy {
       set_tag(detail::narrow_cast<Tag>(packed::template tag_for_type<detail::field_traits<T>>()));
       return get_payload<detail::field_traits<T>>();
     }
+
   private:
     Tag get_tag() const {
       return reinterpret_cast<detail::boxer_t<Tag> const&>(buffer[0]);
     }
 
     void set_tag(Tag tag) {
-      reinterpret_cast<detail::boxer_t<Tag>&>(buffer[0]) = tag;
+      reinterpret_cast<detail::boxer_t<Tag>&>(mutable_buffer()[0]) = tag;
     }
 
     template <typename T>
@@ -93,9 +94,20 @@ namespace nocopy {
       );
     }
 
+    using buffer_type = std::array<unsigned char, size()>;
   public:
-    // I'd make this private, but then this wouldn't technically be an aggregate
-    alignas(alignment()) std::array<unsigned char, size()> buffer;
+    oneof& operator=(oneof const& other) {
+      mutable_buffer() = other.buffer;
+      return *this;
+    }
+
+    // This must be public for oneof to be an aggreggate
+    alignas(alignment()) buffer_type const buffer;
+
+  private:
+    buffer_type& mutable_buffer() {
+      return const_cast<buffer_type&>(buffer);
+    }
   };
 
   template <typename ...Ts>

@@ -22,33 +22,41 @@ namespace nocopy { namespace detail {
     struct reference_impl;
 
     template <typename T>
-    struct reference_impl<T, true> : structpack<offset_field> {
+    struct reference_impl<T, true> {
       using base_type = structpack<offset_field>;
-      explicit operator Offset() const { return this->template get<offset_field>(); }
+      explicit operator Offset() const { return data.template get<offset_field>(); }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
-    private:
-      // This doesn't prevent client code from instantiating in all cases, but it helps clarify intent.
-      friend class reference;
-      reference_impl() = default;
+
+      template <typename Field>
+      auto const& get() const { return data.template get<Field>(); }
+
+      template <typename Field>
+      auto& get() { return data.template get<Field>(); }
+
+      base_type data;
     };
 
     template <typename T>
-    struct reference_impl<T, false> : structpack<offset_field, count_field> {
+    struct reference_impl<T, false> {
       using base_type = structpack<offset_field, count_field>;
       explicit operator Offset() const { return this->template get<offset_field>(); }
       auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T const>{t, static_cast<index_type>(this->template get<count_field>())};
+        return gsl::span<T const>{t, static_cast<index_type>(data.template get<count_field>())};
       }
       auto deref(T* t) {
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T>{t, static_cast<index_type>(this->template get<count_field>())};
+        return gsl::span<T>{t, static_cast<index_type>(data.template get<count_field>())};
       }
-    private:
-      // This doesn't prevent client code from instantiating in all cases, but it helps clarify intent.
-      friend class reference;
-      reference_impl() = default;
+
+      template <typename Field>
+      auto const& get() const { return data.template get<Field>(); }
+
+      template <typename Field>
+      auto& get() { return data.template get<Field>(); }
+
+      base_type data;
     };
 
     // These types should not be instantiated manually! Use create_single and create_range instead.
@@ -63,14 +71,14 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     static single<T> create_single(Offset offset) {
-      single<T> ref;
+      single<T> ref{};
       ref.template get<offset_field>() = offset;
       return ref;
     }
 
     template <typename T>
     static range<T> create_range(Offset offset, Offset count) {
-      range<T> ref;
+      range<T> ref{};
       ref.template get<offset_field>() = offset;
       ref.template get<count_field>() = count;
       return ref;

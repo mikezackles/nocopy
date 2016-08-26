@@ -25,21 +25,25 @@ SCENARIO("structpack") {
     std::array<uint8_t, sizeof(measurement_t)> buffer;
     buffer.fill(1);
 
-    WHEN("a default-initialized structpack is constructed from the buffer") {
-      auto measurep = new (&buffer) measurement_t;
+    // NOTE - These test cases have been disabled because value initialization
+    // is required now that nocopy aggregate types are implemented using public
+    // const buffers.
 
-      THEN("the data is still garbage") {
-        REQUIRE(measurep->get<measurement::second>() != 0);
-      }
-    }
+    //WHEN("a default-initialized structpack is constructed from the buffer") {
+    //  auto measurep = new (&buffer) measurement_t;
 
-    WHEN("a zero-initialized structpack is constructed from the buffer") {
-      auto measurep = new (&buffer) measurement_t();
+    //  THEN("the data is still garbage") {
+    //    REQUIRE(measurep->get<measurement::second>() != 0);
+    //  }
+    //}
 
-      THEN("the data is zeroed") {
-        REQUIRE(measurep->get<measurement::second>() == 0);
-      }
-    }
+    //WHEN("a zero-initialized structpack is constructed from the buffer") {
+    //  auto measurep = new (&buffer) measurement_t();
+
+    //  THEN("the data is zeroed") {
+    //    REQUIRE(measurep->get<measurement::second>() == 0);
+    //  }
+    //}
 
     WHEN("a value-initialized structpack is constructed from the buffer") {
       auto measurep = new (&buffer) measurement_t{};

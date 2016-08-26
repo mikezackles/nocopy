@@ -10,6 +10,7 @@ namespace nocopy {
   template <typename ...Fields>
   class structpack {
     using fieldpack = detail::field_packer<detail::field_traits<Fields>...>;
+    using buffer_type = std::array<unsigned char, fieldpack::packed_size>;
   public:
     static constexpr auto alignment() { return fieldpack::alignment; }
 
@@ -30,8 +31,20 @@ namespace nocopy {
       );
     }
 
-    // I'd make this private, but then this wouldn't technically be an aggregate
-    alignas(alignment()) std::array<unsigned char, fieldpack::packed_size> buffer;
+    structpack(structpack const& other) = default;
+
+    structpack& operator=(structpack const& other) {
+      mutable_buffer() = other.buffer;
+      return *this;
+    }
+
+    // This must be public for structpack to be an aggreggate
+    alignas(alignment()) buffer_type const buffer;
+
+  private:
+    buffer_type& mutable_buffer() {
+      return const_cast<buffer_type&>(buffer);
+    }
   };
 }
 

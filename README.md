@@ -207,7 +207,7 @@ struct measurement {
   , nocopy::version_range< first,     3, 5 >
   >;
 };
-measurement::type<3> measurement_v3;
+measurement::type<3> measurement_v3{};
 ```
 
 [heap](test/heap.cpp)
