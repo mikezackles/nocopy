@@ -94,27 +94,27 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::structpack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta_t, first_t, second_t, coords_t, locations_t>;
 };
 
 struct experiment {
   NOCOPY_FIELD(measure1, measurement::type);
   NOCOPY_FIELD(more_measurements, NOCOPY_ARRAY(measurement::type, 5));
-  using type = nocopy::structpack<measure1, more_measurements>;
+  using type = nocopy::structpack<measure1_t, more_measurements_t>;
 };
 
 int main() {
   experiment::type exp{};
 
-  exp.get<experiment::measure1>().get<measurement::second>() = 5;
-  exp.get<experiment::more_measurements>()[4].get<measurement::second>() = 12;
+  exp.get(experiment::measure1).get(measurement::second) = 5;
+  exp.get(experiment::more_measurements)[4].get(measurement::second) = 12;
 
   std::cout
-    << exp.get<experiment::measure1>().get<measurement::second>()
+    << exp.get(experiment::measure1).get(measurement::second)
     << " == 5"
     << std::endl;
   std::cout
-    << exp.get<experiment::more_measurements>()[4].get<measurement::second>()
+    << exp.get(experiment::more_measurements)[4].get(measurement::second)
     << " == 12"
     << std::endl;
 
@@ -127,10 +127,11 @@ them, their definitions are as follows:
 
 ```c++
 #define NOCOPY_FIELD(field_name, type) \
-  struct field_name { \
+  struct field_name ## _t { \
     using field_type = type; \
     static constexpr auto name() { return #field_name; } \
-  }
+  }; \
+  static constexpr field_name ## _t field_name{}
 
 #define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
 #define NOCOPY_ONEOF(...) ::nocopy::oneof8<__VA_ARGS__>
@@ -154,20 +155,20 @@ struct abc {
   NOCOPY_FIELD(a, float);
   NOCOPY_FIELD(b, uint32_t);
   NOCOPY_FIELD(c, uint8_t);
-  using type = nocopy::oneof8<a, b, c>;
+  using type = nocopy::oneof8<a_t, b_t, c_t>;
 };
 
 int main() {
   abc::type instance{};
-  instance.get<abc::a>() = 4.5;
+  instance.get(abc::a) = 4.5;
   instance.visit(
-    [](abc::a, float val) {
+    [](abc::a_t, float val) {
       std::cout << "Val is " << val << " (should be 4.5)" << std::endl;
     }
-  , [](abc::b, uint32_t) {
+  , [](abc::b_t, uint32_t) {
       std::cerr << "This shouldn't happen" << std::endl;
     }
-  , [](abc::c, uint8_t) {
+  , [](abc::c_t, uint8_t) {
       std::cerr << "This shouldn't happen either" << std::endl;
     }
   );
@@ -192,19 +193,19 @@ struct measurement {
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
 
-  //         field removed in this version
-  //        field added in this version  |
-  template <std::size_t Version> //   |  |
-  using type = //                     |  |
-  nocopy::schema< //                  |  |
-    nocopy::structpack //             |  |
-  , Version //                        v  v
-  , nocopy::version_range< delta,     0    >
-  , nocopy::version_range< first,     0, 1 >
-  , nocopy::version_range< coords,    0    >
-  , nocopy::version_range< locations, 1    >
-  , nocopy::version_range< second,    2, 4 >
-  , nocopy::version_range< first,     3, 5 >
+  //           field removed in this version
+  //          field added in this version  |
+  template <std::size_t Version> //     |  |
+  using type = //                       |  |
+  nocopy::schema< //                    |  |
+    nocopy::structpack //               |  |
+  , Version //                          v  v
+  , nocopy::version_range< delta_t,     0    >
+  , nocopy::version_range< first_t,     0, 1 >
+  , nocopy::version_range< coords_t,    0    >
+  , nocopy::version_range< locations_t, 1    >
+  , nocopy::version_range< second_t,    2, 4 >
+  , nocopy::version_range< first_t,     3, 5 >
   >;
 };
 measurement::type<3> measurement_v3{};
@@ -233,7 +234,7 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::structpack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta_t, first_t, second_t, coords_t, locations_t>;
 };
 
 int main() {
@@ -253,7 +254,7 @@ int main() {
     }
   );
   auto m = heap.deref(result);
-  m[1].get<measurement::first>() = 2000;
+  m[1].get(measurement::first) = 2000;
   heap.free(result);
   return 0;
 }

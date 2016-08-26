@@ -23,38 +23,38 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     struct reference_impl<T, true> {
-      using base_type = structpack<offset_field>;
-      explicit operator Offset() const { return data.template get<offset_field>(); }
+      using base_type = structpack<offset_field_t>;
+      explicit operator Offset() const { return data.get(offset_field); }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
 
       template <typename Field>
-      auto const& get() const { return data.template get<Field>(); }
+      auto const& get(Field) const { return data.get(Field{}); }
 
       template <typename Field>
-      auto& get() { return data.template get<Field>(); }
+      auto& get(Field) { return data.get(Field{}); }
 
       base_type data;
     };
 
     template <typename T>
     struct reference_impl<T, false> {
-      using base_type = structpack<offset_field, count_field>;
-      explicit operator Offset() const { return this->template get<offset_field>(); }
+      using base_type = structpack<offset_field_t, count_field_t>;
+      explicit operator Offset() const { return data.get(offset_field); }
       auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T const>{t, static_cast<index_type>(data.template get<count_field>())};
+        return gsl::span<T const>{t, static_cast<index_type>(data.get(count_field))};
       }
       auto deref(T* t) {
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T>{t, static_cast<index_type>(data.template get<count_field>())};
+        return gsl::span<T>{t, static_cast<index_type>(data.get(count_field))};
       }
 
       template <typename Field>
-      auto const& get() const { return data.template get<Field>(); }
+      auto const& get(Field) const { return data.get(Field{}); }
 
       template <typename Field>
-      auto& get() { return data.template get<Field>(); }
+      auto& get(Field) { return data.get(Field{}); }
 
       base_type data;
     };
@@ -72,15 +72,15 @@ namespace nocopy { namespace detail {
     template <typename T>
     static single<T> create_single(Offset offset) {
       single<T> ref{};
-      ref.template get<offset_field>() = offset;
+      ref.get(offset_field) = offset;
       return ref;
     }
 
     template <typename T>
     static range<T> create_range(Offset offset, Offset count) {
       range<T> ref{};
-      ref.template get<offset_field>() = offset;
-      ref.template get<count_field>() = count;
+      ref.get(offset_field) = offset;
+      ref.get(count_field) = count;
       return ref;
     }
 

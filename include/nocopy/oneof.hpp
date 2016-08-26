@@ -64,7 +64,7 @@ namespace nocopy {
     }
 
     template <typename T>
-    auto& get() {
+    auto& get(T) {
       static_assert(packed::template is_allowed<detail::field_traits<T>>()
       , "a union cannot contain a type not in the union");
       set_tag(detail::narrow_cast<Tag>(packed::template tag_for_type<detail::field_traits<T>>()));

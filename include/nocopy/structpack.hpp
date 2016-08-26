@@ -15,19 +15,19 @@ namespace nocopy {
     static constexpr auto alignment() { return fieldpack::alignment; }
 
     template <typename Field>
-    static constexpr bool has() { return fieldpack::template has<detail::field_traits<Field>>(); }
+    static constexpr bool has(Field) { return fieldpack::template has<detail::field_traits<Field>>(); }
 
     template <typename Field>
-    auto const& get() const {
+    auto const& get(Field) const {
       return reinterpret_cast<typename detail::field_traits<Field>::return_type const&>(
         buffer[fieldpack::template get_offset<detail::field_traits<Field>>()]
       );
     }
 
     template <typename Field>
-    auto& get() {
+    auto& get(Field) {
       return const_cast<typename detail::field_traits<Field>::return_type&>(
-        static_cast<structpack const&>(*this).template get<Field>()
+        static_cast<structpack const&>(*this).template get(Field{})
       );
     }
 

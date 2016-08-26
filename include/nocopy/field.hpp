@@ -5,10 +5,11 @@
 
 #ifndef NOCOPY_NO_MACROS
 #define NOCOPY_FIELD(field_name, type) \
-  struct field_name { \
+  struct field_name ## _t { \
     using field_type = type; \
     static constexpr auto name() { return #field_name; } \
-  }
+  }; \
+  static constexpr field_name ## _t field_name{}
 
 #define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
 #define NOCOPY_ONEOF(...) ::nocopy::oneof8<__VA_ARGS__>

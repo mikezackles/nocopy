@@ -20,7 +20,7 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
-  using type = nocopy::structpack<delta, first, second, coords, locations>;
+  using type = nocopy::structpack<delta_t, first_t, second_t, coords_t, locations_t>;
 };
 using measurement_t = measurement::type;
 
@@ -39,7 +39,7 @@ TEST_CASE("deref", "[heap]") {
     }
   );
   auto m = heap.deref(result);
-  m[1].get<measurement::first>() = 2000;
+  m[1].get(measurement::first) = 2000;
   heap.free(result);
 }
 

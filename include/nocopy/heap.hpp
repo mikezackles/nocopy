@@ -37,7 +37,7 @@ namespace nocopy {
         NOCOPY_FIELD(prev, Offset);
         NOCOPY_FIELD(next_free, Offset);
         NOCOPY_FIELD(prev_free, Offset);
-        using type = structpack<size, prev, next_free, prev_free>;
+        using type = structpack<size_t, prev_t, next_free_t, prev_free_t>;
       };
       using block_header_t = typename block_header::type;
       static constexpr Offset block_header_size = detail::narrow_cast<Offset>(
@@ -178,15 +178,14 @@ namespace nocopy {
 
       template <typename Self, typename Callback>
       static bool each_free(Self&& self, Callback&& callback) {
-        Offset offset = self.get_header(list_head_offset)
-          .template get<typename block_header::next_free>();
+        Offset offset = self.get_header(list_head_offset).get(block_header::next_free);
         while (offset != list_head_offset) {
           assert(0 < offset && offset < self.size_);
           auto& block = self.get_header(offset);
           if (callback(block)) {
             return true;
           }
-          offset = block.template get<typename block_header::next_free>();
+          offset = block.get(block_header::next_free);
         }
         return false;
       }
@@ -223,9 +222,9 @@ namespace nocopy {
         new (&buffer_[list_head_offset]) block_header_t{};
         new (&buffer_[first_block_offset]) block_header_t{};
         new (&buffer_[sentinel_offset()]) block_header_t{};
-        list_head().template get<typename block_header::prev_free>() = list_head_offset;
-        list_head().template get<typename block_header::next_free>() = list_head_offset;
-        first_block().template get<typename block_header::size>() = size_ - initial_bookkeeping;
+        list_head().get(block_header::prev_free) = list_head_offset;
+        list_head().get(block_header::next_free) = list_head_offset;
+        first_block().get(block_header::size) = size_ - initial_bookkeeping;
         mark_as_allocated(list_head());
         mark_as_free(first_block());
         mark_as_allocated(sentinel());
@@ -250,22 +249,22 @@ namespace nocopy {
       void add_to_free_list(block_header_t& block) {
         auto& head = list_head();
         auto& next = next_free(head);
-        block.template get<typename block_header::next_free>()
-          = head.template get<typename block_header::next_free>();
-        block.template get<typename block_header::prev_free>()
-          = next.template get<typename block_header::prev_free>();
+        block.get(block_header::next_free)
+          = head.get(block_header::next_free);
+        block.get(block_header::prev_free)
+          = next.get(block_header::prev_free);
         auto block_offset = get_offset(block);
-        head.template get<typename block_header::next_free>() = block_offset;
-        next.template get<typename block_header::prev_free>() = block_offset;
+        head.get(block_header::next_free) = block_offset;
+        next.get(block_header::prev_free) = block_offset;
       }
 
       void remove_from_free_list(block_header_t& block) {
         auto& prev = prev_free(block);
         auto& next = next_free(block);
-        prev.template get<typename block_header::next_free>()
-          = block.template get<typename block_header::next_free>();
-        next.template get<typename block_header::prev_free>()
-          = block.template get<typename block_header::prev_free>();
+        prev.get(block_header::next_free)
+          = block.get(block_header::next_free);
+        next.get(block_header::prev_free)
+          = block.get(block_header::prev_free);
       }
 
       bool trim(block_header_t& block, Offset target_size) {
@@ -275,12 +274,12 @@ namespace nocopy {
         if (target_size > block_size) return false;
         auto remaining_size = block_size - target_size;
         if (remaining_size >= block_header_size) {
-          block.template get<typename block_header::size>() = target_size;
+          block.get(block_header::size) = target_size;
           auto& remainder = next_adjacent(block);
-          remainder.template get<typename block_header::size>() = remaining_size - block_header_size;
-          remainder.template get<typename block_header::prev>() = get_offset(block);
+          remainder.get(block_header::size) = remaining_size - block_header_size;
+          remainder.get(block_header::prev) = get_offset(block);
           auto& next = next_adjacent(remainder);
-          next.template get<typename block_header::prev>() = get_offset(remainder);
+          next.get(block_header::prev) = get_offset(remainder);
           mark_as_free(remainder);
           add_to_free_list(remainder);
         }
@@ -300,27 +299,27 @@ namespace nocopy {
         if (prev_is_free && next_is_free) {
           remove_from_free_list(prev);
           remove_from_free_list(next);
-          prev.template get<typename block_header::size>()
+          prev.get(block_header::size)
             = prev_size + block_header_size + curr_size + block_header_size + next_size;
           mark_as_free(prev);
           auto& new_next = next_adjacent(prev);
-          new_next.template get<typename block_header::prev>() = get_offset(prev);
+          new_next.get(block_header::prev) = get_offset(prev);
           return prev;
         } else if (prev_is_free) {
           remove_from_free_list(prev);
-          prev.template get<typename block_header::size>()
+          prev.get(block_header::size)
             = prev_size + block_header_size + curr_size;
           mark_as_free(prev);
           auto& new_next = next_adjacent(prev);
-          new_next.template get<typename block_header::prev>() = get_offset(prev);
+          new_next.get(block_header::prev) = get_offset(prev);
           return prev;
         } else if (next_is_free) {
           remove_from_free_list(next);
-          block.template get<typename block_header::size>()
+          block.get(block_header::size)
             = curr_size + block_header_size + next_size;
           mark_as_free(block);
           auto& new_next = next_adjacent(block);
-          new_next.template get<typename block_header::prev>() = get_offset(block);
+          new_next.get(block_header::prev) = get_offset(block);
           return block;
         } else {
           mark_as_free(block);
@@ -329,14 +328,14 @@ namespace nocopy {
       }
 
       block_header_t const& next_free(block_header_t const& block) const {
-        return get_header(block.template get<typename block_header::next_free>());
+        return get_header(block.get(block_header::next_free));
       }
       block_header_t& next_free(block_header_t const& block) {
         return const_cast<block_header_t&>(static_cast<heap const&>(*this).next_free(block));
       }
 
       block_header_t const& prev_free(block_header_t const& block) const {
-        return get_header(block.template get<typename block_header::prev_free>());
+        return get_header(block.get(block_header::prev_free));
       }
       block_header_t& prev_free(block_header_t const& block) {
         return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_free(block));
@@ -352,25 +351,25 @@ namespace nocopy {
       }
 
       block_header_t const& prev_adjacent(block_header_t const& block) const {
-        return get_header(block.template get<typename block_header::prev>());
+        return get_header(block.get(block_header::prev));
       }
       block_header_t& prev_adjacent(block_header_t const& block) {
         return const_cast<block_header_t&>(static_cast<heap const&>(*this).prev_adjacent(block));
       }
 
       static std::tuple<Offset, bool> get_block_size(block_header_t const& block) {
-        Offset s = block.template get<typename block_header::size>();
+        Offset s = block.get(block_header::size);
         Offset size = s & ~Offset{1};
         bool is_free = (s & Offset{1}) == 1;
         return std::make_tuple(size, is_free);
       }
 
       static void mark_as_free(block_header_t& block) {
-        block.template get<typename block_header::size>() |= Offset{1};
+        block.get(block_header::size) |= Offset{1};
       }
 
       static void mark_as_allocated(block_header_t& block) {
-        block.template get<typename block_header::size>() &= ~Offset{1};
+        block.get(block_header::size) &= ~Offset{1};
       }
 
       Offset sentinel_offset() const {
