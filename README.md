@@ -3,7 +3,7 @@ Overview
 
 `nocopy` is a header-only library that aims to provide a type-safe,
 compile-time, zero-copy solution to serialization. As of this writing, the
-[`include`](include/) directory contains less than 1500 lines of code.
+[`include`](include/) directory contains less than 1700 lines of code.
 
 This project was inspired by
 [FlatBuffers](https://google.github.io/flatbuffers/) and
@@ -139,7 +139,7 @@ them, their definitions are as follows:
 ```
 
 Technically, `field_name::name` is currently unused, but it is intended to
-support JSON dumps.
+support JSON dumps (not yet implemented).
 
 [oneof](test/oneof.cpp)
 -
@@ -196,7 +196,7 @@ struct measurement {
   //           field removed in this version
   //          field added in this version  |
   template <std::size_t Version> //     |  |
-  using type = //                       |  |
+  using v = //                       |  |
   nocopy::schema< //                    |  |
     nocopy::structpack //               |  |
   , Version //                          v  v
@@ -208,7 +208,7 @@ struct measurement {
   , nocopy::version_range< first_t,     3, 5 >
   >;
 };
-measurement::type<3> measurement_v3{};
+measurement::v<3> measurement_v3{};
 ```
 
 [heap](test/heap.cpp)

@@ -13,7 +13,7 @@ struct measurement {
   //           field removed in this version
   //          field added in this version  |
   template <std::size_t Version> //     |  |
-  using type = //                       |  |
+  using v = //                       |  |
   nocopy::schema< //                    |  |
     nocopy::structpack //               |  |
   , Version //                          v  v
@@ -25,48 +25,45 @@ struct measurement {
   , nocopy::version_range< first_t,     3, 5 >
   >;
 };
-template <std::size_t Version>
-using measurement_t = typename measurement::type<Version>;
-
 
 SCENARIO("archive") {
   GIVEN("a versioned archive") {
     THEN("the correct fields should be present") {
-      REQUIRE(measurement_t<0>::has(measurement::delta));
-      REQUIRE(measurement_t<0>::has(measurement::first));
-      REQUIRE(!measurement_t<0>::has(measurement::second));
-      REQUIRE(measurement_t<0>::has(measurement::coords));
-      REQUIRE(!measurement_t<0>::has(measurement::locations));
+      REQUIRE(measurement::v<0>::has(measurement::delta));
+      REQUIRE(measurement::v<0>::has(measurement::first));
+      REQUIRE(!measurement::v<0>::has(measurement::second));
+      REQUIRE(measurement::v<0>::has(measurement::coords));
+      REQUIRE(!measurement::v<0>::has(measurement::locations));
 
-      REQUIRE(measurement_t<1>::has(measurement::delta));
-      REQUIRE(measurement_t<1>::has(measurement::first));
-      REQUIRE(!measurement_t<1>::has(measurement::second));
-      REQUIRE(measurement_t<1>::has(measurement::coords));
-      REQUIRE(measurement_t<1>::has(measurement::locations));
+      REQUIRE(measurement::v<1>::has(measurement::delta));
+      REQUIRE(measurement::v<1>::has(measurement::first));
+      REQUIRE(!measurement::v<1>::has(measurement::second));
+      REQUIRE(measurement::v<1>::has(measurement::coords));
+      REQUIRE(measurement::v<1>::has(measurement::locations));
 
-      REQUIRE(measurement_t<2>::has(measurement::delta));
-      REQUIRE(!measurement_t<2>::has(measurement::first));
-      REQUIRE(measurement_t<2>::has(measurement::second));
-      REQUIRE(measurement_t<2>::has(measurement::coords));
-      REQUIRE(measurement_t<2>::has(measurement::locations));
+      REQUIRE(measurement::v<2>::has(measurement::delta));
+      REQUIRE(!measurement::v<2>::has(measurement::first));
+      REQUIRE(measurement::v<2>::has(measurement::second));
+      REQUIRE(measurement::v<2>::has(measurement::coords));
+      REQUIRE(measurement::v<2>::has(measurement::locations));
 
-      REQUIRE(measurement_t<3>::has(measurement::delta));
-      REQUIRE(measurement_t<3>::has(measurement::first));
-      REQUIRE(measurement_t<3>::has(measurement::second));
-      REQUIRE(measurement_t<3>::has(measurement::coords));
-      REQUIRE(measurement_t<3>::has(measurement::locations));
+      REQUIRE(measurement::v<3>::has(measurement::delta));
+      REQUIRE(measurement::v<3>::has(measurement::first));
+      REQUIRE(measurement::v<3>::has(measurement::second));
+      REQUIRE(measurement::v<3>::has(measurement::coords));
+      REQUIRE(measurement::v<3>::has(measurement::locations));
 
-      REQUIRE(measurement_t<4>::has(measurement::delta));
-      REQUIRE(measurement_t<4>::has(measurement::first));
-      REQUIRE(measurement_t<4>::has(measurement::second));
-      REQUIRE(measurement_t<4>::has(measurement::coords));
-      REQUIRE(measurement_t<4>::has(measurement::locations));
+      REQUIRE(measurement::v<4>::has(measurement::delta));
+      REQUIRE(measurement::v<4>::has(measurement::first));
+      REQUIRE(measurement::v<4>::has(measurement::second));
+      REQUIRE(measurement::v<4>::has(measurement::coords));
+      REQUIRE(measurement::v<4>::has(measurement::locations));
 
-      REQUIRE(measurement_t<5>::has(measurement::delta));
-      REQUIRE(measurement_t<5>::has(measurement::first));
-      REQUIRE(!measurement_t<5>::has(measurement::second));
-      REQUIRE(measurement_t<5>::has(measurement::coords));
-      REQUIRE(measurement_t<5>::has(measurement::locations));
+      REQUIRE(measurement::v<5>::has(measurement::delta));
+      REQUIRE(measurement::v<5>::has(measurement::first));
+      REQUIRE(!measurement::v<5>::has(measurement::second));
+      REQUIRE(measurement::v<5>::has(measurement::coords));
+      REQUIRE(measurement::v<5>::has(measurement::locations));
     }
   }
 }
