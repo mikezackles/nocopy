@@ -7,7 +7,7 @@ namespace nocopy {
     using field = Field;
     static constexpr auto first_version = FirstVersion;
     static constexpr auto last_version = LastVersion;
-    static_assert(first_version < last_version
+    static_assert(first_version <= last_version
     , "field cannot be removed in a version lower than the one in which it is added");
   };
 }

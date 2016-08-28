@@ -5,11 +5,18 @@ Overview
 compile-time, zero-copy solution to serialization. As of this writing, the
 [`include`](include/) directory contains less than 1700 lines of code.
 
+### Why zero copy
+
+### Similar projects
+
 This project was inspired by
 [FlatBuffers](https://google.github.io/flatbuffers/) and
 [Cap'n Proto](https://capnproto.org/). Unlike those projects, `nocopy` makes no
 attempt to directly support any languages other than C++14, and therefore there
 is no standalone schema compiler. Your C++ compiler is your schema compiler.
+
+If you don't want zero copy, I suggest taking a look at the excellent
+[cereal](http://uscilab.github.io/cereal/) library.
 
 Callbacks
 -
@@ -104,17 +111,20 @@ struct experiment {
 };
 
 int main() {
-  experiment::type exp{};
+  using m = measurement;
+  using e = experiment;
 
-  exp[experiment::measure1][measurement::second] = 5;
-  exp[experiment::more_measurements][4][measurement::second] = 12;
+  e::type exp{};
+
+  exp[e::measure1][m::second] = 5;
+  exp[e::more_ms][4][m::second] = 12;
 
   std::cout
-    << exp[experiment::measure1][measurement::second]
+    << exp[e::measure1][m::second]
     << " == 5"
     << std::endl;
   std::cout
-    << exp[experiment::more_measurements][4][measurement::second]
+    << exp[e::more_measurements][4][m::second]
     << " == 12"
     << std::endl;
 
@@ -185,6 +195,25 @@ unions that contain the same type under a different name.
 ```c++
 #include <nocopy.hpp>
 
+struct nested {
+  NOCOPY_FIELD(a, uint16_t);
+  NOCOPY_FIELD(b, int8_t);
+  NOCOPY_FIELD(c, int32_t);
+  NOCOPY_FIELD(d, int32_t);
+  NOCOPY_FIELD(e, NOCOPY_ONEOF(c_t, d_t));
+
+  template <std::size_t Version>
+  using v =
+  nocopy::schema<
+    nocopy::structpack
+  , Version
+  , nocopy::version_range<a_t, 0>
+  , nocopy::version_range<b_t, 1, 3>
+  , nocopy::version_range<c_t, 0>
+  , nocopy::version_range<e_t, 1>
+  >;
+};
+
 struct measurement {
   NOCOPY_FIELD(delta, float);
   NOCOPY_FIELD(first, uint32_t);
@@ -192,23 +221,27 @@ struct measurement {
   NOCOPY_FIELD(third, NOCOPY_ARRAY(int8_t, 4));
   NOCOPY_FIELD(coords, NOCOPY_ARRAY(uint8_t, 10));
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
+  NOCOPY_VERSIONED_FIELD(nested_field, nested);
 
-  //           field removed in this version
-  //          field added in this version  |
-  template <std::size_t Version> //     |  |
-  using v = //                       |  |
-  nocopy::schema< //                    |  |
-    nocopy::structpack //               |  |
-  , Version //                          v  v
-  , nocopy::version_range< delta_t,     0    >
-  , nocopy::version_range< first_t,     0, 1 >
-  , nocopy::version_range< coords_t,    0    >
-  , nocopy::version_range< locations_t, 1    >
-  , nocopy::version_range< second_t,    2, 4 >
-  , nocopy::version_range< first_t,     3, 5 >
+  //                       field removed in this version
+  //                      field added in this version  |
+  template <std::size_t Version> //                 |  |
+  using v = //                                      |  |
+  nocopy::schema< //                                |  |
+    nocopy::structpack //                           |  |
+  , Version //                                      v  v
+  , nocopy::version_range< delta_t,                 0    >
+  , nocopy::version_range< first_t,                 0, 1 >
+  , nocopy::version_range< coords_t,                0    >
+  , nocopy::version_range< locations_t,             1    >
+  , nocopy::version_range< second_t,                2, 4 >
+  , nocopy::version_range< first_t,                 3, 5 >
+  , nocopy::version_range< nested_field_t<Version>, 4, 5 >
   >;
 };
+
 measurement::v<3> measurement_v3{};
+measurement_v3[measurement::nested_field_v<3>][nested::a] = 4;
 ```
 
 [heap](test/heap.cpp)
@@ -285,6 +318,8 @@ compile if your code contains no floating point fields.
 Note that `CHAR_BIT == 8` is *not* an assumption, so as of now, `nocopy`
 attempts to support platforms where a byte contains more than 8 bits. For now
 this support is theoretical as I have no such hardware on which to test.
+
+There is not yet support for a map/hash type.
 
 Strict Aliasing
 -
