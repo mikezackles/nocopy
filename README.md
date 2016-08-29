@@ -5,8 +5,6 @@ Overview
 compile-time, zero-copy solution to serialization. As of this writing, the
 [`include`](include/) directory contains less than 1700 lines of code.
 
-### Why zero copy
-
 ### Similar projects
 
 This project was inspired by
@@ -143,6 +141,14 @@ them, their definitions are as follows:
   }; \
   static constexpr field_name ## _t field_name{}
 
+// This one is for nested schemas (see below)
+#define NOCOPY_VERSIONED_FIELD(field_name, type) \
+  template <std::size_t Version> \
+  struct field_name ## _t { \
+    using field_type = typename type ::v<Version>; \
+    static constexpr auto name() { return #field_name; } \
+  }
+
 #define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
 #define NOCOPY_ONEOF(...) ::nocopy::oneof8<__VA_ARGS__>
 #define NOCOPY_ONEOF16(...) ::nocopy::oneof16<__VA_ARGS__>
@@ -192,6 +198,12 @@ unions that contain the same type under a different name.
 [schema](test/schema.cpp)
 -
 
+The `nocopy::schema` type facilitates versioned structpacks. Technically this
+type contains a nested structpack in its `data` member, but it supports the same
+structpack interface, with additional member functions dedicated to nested
+schemas. This nested schema handling allows a single schema version to propagate
+to nested types automatically.
+
 ```c++
 #include <nocopy.hpp>
 
@@ -205,12 +217,11 @@ struct nested {
   template <std::size_t Version>
   using v =
   nocopy::schema<
-    nocopy::structpack
-  , Version
-  , nocopy::version_range<a_t, 0>
-  , nocopy::version_range<b_t, 1, 3>
-  , nocopy::version_range<c_t, 0>
-  , nocopy::version_range<e_t, 1>
+    Version
+  , nocopy::version_range<a_t, 4>
+  , nocopy::version_range<b_t, 4, 4>
+  , nocopy::version_range<c_t, 4>
+  , nocopy::version_range<e_t, 5>
   >;
 };
 
@@ -223,26 +234,30 @@ struct measurement {
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
   NOCOPY_VERSIONED_FIELD(nested_field, nested);
 
-  //                       field removed in this version
-  //                      field added in this version  |
-  template <std::size_t Version> //                 |  |
-  using v = //                                      |  |
-  nocopy::schema< //                                |  |
-    nocopy::structpack //                           |  |
-  , Version //                                      v  v
-  , nocopy::version_range< delta_t,                 0    >
-  , nocopy::version_range< first_t,                 0, 1 >
-  , nocopy::version_range< coords_t,                0    >
-  , nocopy::version_range< locations_t,             1    >
-  , nocopy::version_range< second_t,                2, 4 >
-  , nocopy::version_range< first_t,                 3, 5 >
-  , nocopy::version_range< nested_field_t<Version>, 4, 5 >
+  //                     field removed in this version
+  //                    field added in this version  |
+  template <std::size_t Version> //               |  |
+  using v = //                                    |  |
+  nocopy::schema< //                              |  |
+    Version //                                    v  v
+  , nocopy::version_range< delta_t,               0    >
+  , nocopy::version_range< first_t,               0, 1 >
+  , nocopy::version_range< coords_t,              0    >
+  , nocopy::version_range< locations_t,           1    >
+  , nocopy::version_range< second_t,              2, 4 >
+  , nocopy::version_range< first_t,               3, 5 >
+  , nocopy::version_range< nested_field<Version>, 4, 5 >
   >;
 };
 
 measurement::v<3> measurement_v3{};
-measurement_v3[measurement::nested_field_v<3>][nested::a] = 4;
+measurement_v3.get<measurement::nested_field>()[nested::a] = 4;
 ```
+
+Note that accessing schema fields that refer to another schema requires a
+slightly different interface from normal fields (`schema::get` instead of
+`schema::operator[]`. This is because the type passed is incomplete. (It
+requires a version.)
 
 [heap](test/heap.cpp)
 -

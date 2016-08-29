@@ -70,10 +70,6 @@ namespace nocopy {
       T, typename check_exists<typename T::base_type>::type
     > {
       static_assert(
-        std::is_base_of<typename T::base_type, T>::value
-      , "declared base class must actually be a base class"
-      );
-      static_assert(
         sizeof(T) == sizeof(typename T::base_type)
       , "base class must be same size as derived class"
       );

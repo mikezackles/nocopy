@@ -40,8 +40,35 @@ namespace nocopy {
     };
   }
 
+  // NOTE - it would be simpler to inherit from the structpack type instead of
+  // delegating, but as of C++14 this would not technically be an aggregate
+  // type. This changes with C++17.
   template <std::size_t Version, typename ...VersionRanges>
-  using schema = typename detail::versioned_structpack<Version, VersionRanges...>::type;
+  struct schema {
+    using base_type = typename detail::versioned_structpack<Version, VersionRanges...>::type;
+
+    static constexpr auto alignment() { return base_type::alignment(); }
+
+    template <typename Field>
+    static constexpr bool has(Field f) { return base_type::has(f); }
+
+    template <template <std::size_t> class Field>
+    static constexpr bool has() { return base_type::has(Field<Version>{}); }
+
+    template <typename Field>
+    auto const& operator[](Field f) const { return data[f]; }
+
+    template <typename Field>
+    auto& operator[](Field f) { return data[f]; }
+
+    template <template <std::size_t> class Field>
+    auto const& get() const { return data[Field<Version>{}]; }
+
+    template <template <std::size_t> class Field>
+    auto& get() { return data[Field<Version>{}]; }
+
+    base_type data;
+  };
 }
 
 #endif
