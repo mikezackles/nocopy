@@ -12,8 +12,7 @@ struct nested {
   template <std::size_t Version>
   using v =
   nocopy::schema<
-    nocopy::structpack
-  , Version
+    Version
   , nocopy::version_range<a_t, 4>
   , nocopy::version_range<b_t, 4, 4>
   , nocopy::version_range<c_t, 4>
@@ -35,8 +34,7 @@ struct measurement {
   template <std::size_t Version> //                 |  |
   using v = //                                      |  |
   nocopy::schema< //                                |  |
-    nocopy::structpack //                           |  |
-  , Version //                                      v  v
+    Version //                                      v  v
   , nocopy::version_range< delta_t,                 0    >
   , nocopy::version_range< first_t,                 0, 1 >
   , nocopy::version_range< coords_t,                0    >

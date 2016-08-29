@@ -14,8 +14,7 @@ namespace nocopy {
     namespace hana = boost::hana;
 
     template <
-      template <typename ...> class Result
-    , std::size_t Version
+      std::size_t Version
     , typename ...VersionRanges>
     struct schema_impl {
     private:
@@ -32,7 +31,7 @@ namespace nocopy {
       struct get_type {
         template <typename ...Ts>
         constexpr auto operator()(Ts...) const {
-          return hana::type_c<Result<typename Ts::type::field...>>;
+          return hana::type_c<structpack<typename Ts::type::field...>>;
         }
       };
 
@@ -41,8 +40,8 @@ namespace nocopy {
     };
   }
 
-  template <template <typename ...> class Result, std::size_t Version, typename ...VersionRanges>
-  using schema = typename detail::schema_impl<Result, Version, VersionRanges...>::type;
+  template <std::size_t Version, typename ...VersionRanges>
+  using schema = typename detail::schema_impl<Version, VersionRanges...>::type;
 }
 
 #endif
