@@ -55,6 +55,8 @@ namespace nocopy {
     template <template <std::size_t> class Field>
     static constexpr bool has() { return base_type::has(Field<Version>{}); }
 
+    constexpr std::size_t version() const { return Version; }
+
     template <typename Field>
     auto const& operator[](Field f) const { return data[f]; }
 

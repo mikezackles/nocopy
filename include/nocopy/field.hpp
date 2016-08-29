@@ -13,12 +13,12 @@
 
 #define NOCOPY_VERSIONED_FIELD(field_name, type) \
   template <std::size_t Version> \
-  struct field_name { \
+  struct field_name ## _t { \
     using field_type = typename type ::v<Version>; \
     static constexpr auto name() { return #field_name; } \
   }; \
   template <std::size_t Version> \
-  static constexpr field_name <Version> field_name ## _v{}
+  static constexpr field_name ## _t<Version> field_name{}
 
 #define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
 #define NOCOPY_ONEOF(...) ::nocopy::oneof8<__VA_ARGS__>

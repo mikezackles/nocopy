@@ -147,7 +147,9 @@ them, their definitions are as follows:
   struct field_name ## _t { \
     using field_type = typename type ::v<Version>; \
     static constexpr auto name() { return #field_name; } \
-  }
+  }; \
+  template <std::size_t Version> \
+  static constexpr field_name ## _t<Version> field_name{}
 
 #define NOCOPY_ARRAY(type, size) ::nocopy::array<type, size>
 #define NOCOPY_ONEOF(...) ::nocopy::oneof8<__VA_ARGS__>
@@ -215,8 +217,7 @@ struct nested {
   NOCOPY_FIELD(e, NOCOPY_ONEOF(c_t, d_t));
 
   template <std::size_t Version>
-  using v =
-  nocopy::schema<
+  using v = nocopy::schema<
     Version
   , nocopy::version_range<a_t, 4>
   , nocopy::version_range<b_t, 4, 4>
@@ -234,40 +235,44 @@ struct measurement {
   NOCOPY_FIELD(locations, NOCOPY_ARRAY(uint32_t, 20));
   NOCOPY_VERSIONED_FIELD(nested_field, nested);
 
-  //                     field removed in this version
-  //                    field added in this version  |
-  template <std::size_t Version> //               |  |
-  using v = //                                    |  |
-  nocopy::schema< //                              |  |
-    Version //                                    v  v
-  , nocopy::version_range< delta_t,               0    >
-  , nocopy::version_range< first_t,               0, 1 >
-  , nocopy::version_range< coords_t,              0    >
-  , nocopy::version_range< locations_t,           1    >
-  , nocopy::version_range< second_t,              2, 4 >
-  , nocopy::version_range< first_t,               3, 5 >
-  , nocopy::version_range< nested_field<Version>, 4, 5 >
+  //                       field removed in this version
+  //                      field added in this version  |
+  template <std::size_t Version> //                 |  |
+  using v = nocopy::schema< //                      |  |
+    Version //                                      v  v
+  , nocopy::version_range< delta_t,                 0    >
+  , nocopy::version_range< first_t,                 0, 1 >
+  , nocopy::version_range< coords_t,                0    >
+  , nocopy::version_range< locations_t,             1    >
+  , nocopy::version_range< second_t,                2, 4 >
+  , nocopy::version_range< first_t,                 3, 5 >
+  , nocopy::version_range< nested_field_t<Version>, 4, 5 >
   >;
 };
 
-measurement::v<3> measurement_v3{};
-measurement_v3.get<measurement::nested_field>()[nested::a] = 4;
+measurement::v<5> measurement_v5{};
+
+measurement_v5.get<measurement::nested_field_t>()[nested::a] = 4;
+// is equivalent to
+measurement_v5[measurement::nested_field<m_v5.version()>][nested::a] = 4;
+// is equivalent to
+measurement_v5[measurement::nested_field<5>][nested::a] = 4;
 ```
 
-Note that accessing schema fields that refer to another schema requires a
-slightly different interface from normal fields (`schema::get` instead of
-`schema::operator[]`. This is because the type passed is incomplete. (It
-requires a version.)
+Note that accessing schema fields that refer to another schema is somewhat
+different because the type passed requires a version. Also note that accessing
+fields that do not exist for the given version is a compile time error rather
+than a runtime error.
 
 [heap](test/heap.cpp)
 -
 
 Right now this is mostly a proof of concept, but `nocopy` includes a very basic
-heap implementation (not thread safe). So, for example, one system could create
-a heap inside a buffer, send the buffer to another system, and that system could
-then edit it directly. At some point I'd like to make heap reference deletes
-cascade, in that deleting a reference owning other references would
-automatically trigger the children's deletion.
+portable heap implementation (not thread safe). So, for example, one system
+could create a heap inside a buffer, send the buffer to another system, and that
+system could then edit it directly. At some point I'd like to make heap
+reference deletes cascade, in that deleting a reference owning other references
+would automatically trigger the children's deletion.
 
 For variable byte size heap support, make sure to set the AssumeSameSizedByte
 template parameter to false (divides the maximum heap size by `CHAR_BIT`).
