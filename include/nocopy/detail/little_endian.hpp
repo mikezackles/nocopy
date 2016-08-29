@@ -1,6 +1,8 @@
 #ifndef UUID_D92CFF0B_148A_4023_B336_BE78F6E57ED0
 #define UUID_D92CFF0B_148A_4023_B336_BE78F6E57ED0
 
+#include <nocopy/detail/narrow_cast.hpp>
+
 #include <climits>
 #include <cstring>
 #include <type_traits>
@@ -34,10 +36,10 @@ namespace nocopy { namespace detail {
     using byte_array = std::array<unsigned char, sizeof(Scalar)>;
     static_assert(Index < sizeof(Scalar), "");
     static Scalar load(byte_array const& source) {
-      return (Scalar{source[Index]} << (CHAR_BIT * Index)) | converter<Scalar, Index - 1>::load(source);
+      return detail::narrow_cast<Scalar>(Scalar{source[Index]} << (CHAR_BIT * Index)) | converter<Scalar, Index - 1>::load(source);
     }
     static void store(Scalar source, byte_array& target) {
-      Scalar tmp = source >> (CHAR_BIT * Index);
+      Scalar tmp = detail::narrow_cast<Scalar>(source >> (CHAR_BIT * Index));
       target[Index] = reinterpret_cast<unsigned char&>(tmp);
       converter<Scalar, Index - 1>::store(source, target);
     }
