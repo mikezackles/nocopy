@@ -1,15 +1,15 @@
 Overview
 -
 
-`nocopy` is a header-only library that aims to provide a type-safe,
-compile-time, zero-copy solution to serialization. As of this writing, the
+Nocopy is a header-only library that aims to provide a type-safe, compile-time,
+zero-copy solution to serialization. As of this writing, the
 [`include`](include/) directory contains less than 1700 lines of code.
 
 ### Similar projects
 
 This project was inspired by
 [FlatBuffers](https://google.github.io/flatbuffers/) and
-[Cap'n Proto](https://capnproto.org/). Unlike those projects, `nocopy` makes no
+[Cap'n Proto](https://capnproto.org/). Unlike those projects, nocopy makes no
 attempt to directly support any languages other than C++14, and therefore there
 is no standalone schema compiler. Your C++ compiler is your schema compiler.
 
@@ -19,7 +19,7 @@ If you don't want zero copy, I suggest taking a look at the excellent
 Callbacks
 -
 
-All runtime error handling and visitation in `nocopy` is performed via lambda
+All runtime error handling and visitation in nocopy is performed via lambda
 callbacks. Functions that may result in multiple types and/or a
 `std::error_code` accept type-safe lambas (in any order). The values passed to
 these lambas can be handled inline, or they may be merged into a single type via
@@ -77,7 +77,7 @@ std::cout << "result is " << result << std::endl;
 [structpack](test/structpack.cpp)
 -
 
-`nocopy` structpacks are essentially traditional packed structs, but the packing
+Nocopy structpacks are essentially traditional packed structs, but the packing
 is performed automatically at compile time. Scalar types are aligned to their
 size, and structpack fields are sorted by alignment from largest to smallest.
 Because these alignments are all guaranteed to be powers of two, smaller
@@ -206,6 +206,11 @@ structpack interface, with additional member functions dedicated to nested
 schemas. This nested schema handling allows a single schema version to propagate
 to nested types automatically.
 
+Nested structpack types are not required to be schemas, so if you have something
+like a vector type that you do not expect to change, you can nest it normally.
+You can always remove a field entirely and replace it with a new one; schema
+nesting just gives you additional granularity.
+
 ```c++
 #include <nocopy.hpp>
 
@@ -250,13 +255,20 @@ struct measurement {
   >;
 };
 
-measurement::v<5> measurement_v5{};
+using m = measurement;
+using n = nested;
 
-measurement_v5.get<measurement::nested_field_t>()[nested::a] = 4;
+measurement::v<5> m_v5{};
+
+m_v5[m::first] = 4; // compile error! (field not present in version 5)
+m_v5[m::coords][3] = 12 // OK!
+
+// nested schema:
+m_v5.get<m::nested_field_t>()[n::a] = 4;
 // is equivalent to
-measurement_v5[measurement::nested_field<m_v5.version()>][nested::a] = 4;
+m_v5[m::nested_field<m_v5.version()>][n::a] = 4;
 // is equivalent to
-measurement_v5[measurement::nested_field<5>][nested::a] = 4;
+m_v5[m::nested_field<5>][n::a] = 4;
 ```
 
 Note that accessing schema fields that refer to another schema is somewhat
@@ -267,7 +279,7 @@ than a runtime error.
 [heap](test/heap.cpp)
 -
 
-Right now this is mostly a proof of concept, but `nocopy` includes a very basic
+Right now this is mostly a proof of concept, but nocopy includes a very basic
 portable heap implementation (not thread safe). So, for example, one system
 could create a heap inside a buffer, send the buffer to another system, and that
 system could then edit it directly. At some point I'd like to make heap
@@ -316,7 +328,7 @@ int main() {
 Platforms
 -
 
-`nocopy` uses [Boost.Hana](https://github.com/boostorg/hana), which requires
+Nocopy uses [Boost.Hana](https://github.com/boostorg/hana), which requires
 relatively strict C++14 compliance. As such, nocopy is limited to the platforms
 on which Boost.Hana compiles (current versions of gcc or clang, including
 clang-cl). For now, my tests are limited to these two compilers on Arch Linux.
@@ -329,23 +341,23 @@ Assumptions/Caveats
  `double` contains 64 bits
 * `long double` fields are not supported
 
-`nocopy` does its best to check assumptions at compile time, so if for some
-reason your platform is not compatible, your code should fail to compile. Note
-that features that are not used are not checked, so for example if you intend to
+Nocopy does its best to check assumptions at compile time, so if for some reason
+your platform is not compatible, your code should fail to compile. Note that
+features that are not used are not checked, so for example if you intend to
 support platforms with exotic floating point implementations, you can still
 compile if your code contains no floating point fields.
 
-Note that `CHAR_BIT == 8` is *not* an assumption, so as of now, `nocopy`
-attempts to support platforms where a byte contains more than 8 bits. For now
-this support is theoretical as I have no such hardware on which to test.
+Note that `CHAR_BIT == 8` is *not* an assumption, so as of now, nocopy attempts
+to support platforms where a byte contains more than 8 bits. For now this
+support is theoretical as I have no such hardware on which to test.
 
 There is not yet support for a map/hash type.
 
 Strict Aliasing
 -
 
-`nocopy` uses `reinterpret_cast`, but special care has been taken to avoid
-strict aliasing errors. Specifically, `reinterpret_cast` is only used to convert
+Nocopy uses `reinterpret_cast`, but special care has been taken to avoid strict
+aliasing errors. Specifically, `reinterpret_cast` is only used to convert
 references to `unsigned char` to references to aggregate types whose sole data
 member is `std::array<unsigned char, N>`. It is also used to cast scalar types
 to `unsigned char` during endian conversion. I've done my best to interpret the
@@ -357,7 +369,7 @@ Optimization
 
 As data is stored in little-endian format, no conversion is necessary on
 little-endian platforms. AFAIK, there is no reliable way to detect endianness at
-compile time, so by default, `nocopy` performs conversion on all platforms. Your
+compile time, so by default, nocopy performs conversion on all platforms. Your
 compiler may be smart enough to optimize this away, but if you want to be
 certain that no conversion is performed, simply define
 `NOCOPY_OPTIMIZE_LITTLE_ENDIAN` (`OPTIMIZE_LITTLE_ENDIAN` in the CMake cache).
@@ -385,4 +397,4 @@ For the Future
 License
 -
 
-`nocopy` is distributed under the [Apache License, Version 2.0](LICENSE.txt)
+Nocopy is distributed under the [Apache License, Version 2.0](LICENSE.txt)
