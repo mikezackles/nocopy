@@ -16,7 +16,7 @@ namespace nocopy {
     template <
       std::size_t Version
     , typename ...VersionRanges>
-    struct schema_impl {
+    struct versioned_structpack {
     private:
       static constexpr auto fields = hana::make_tuple(hana::type_c<VersionRanges>...);
       struct field_is_in_range {
@@ -41,7 +41,7 @@ namespace nocopy {
   }
 
   template <std::size_t Version, typename ...VersionRanges>
-  using schema = typename detail::schema_impl<Version, VersionRanges...>::type;
+  using schema = typename detail::versioned_structpack<Version, VersionRanges...>::type;
 }
 
 #endif
