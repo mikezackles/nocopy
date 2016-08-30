@@ -377,6 +377,11 @@ Note that if you mistakenly compile with this defined on big-endian platforms,
 the serialized data will not be portable. This flag may also be used to turn off
 conversion regardless of platform if you aren't worried about portability.
 
+Project Structure
+-
+
+![Project Structure](doc/deps.png)
+
 Disclaimer
 -
 
