@@ -9,6 +9,7 @@ BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/back.hpp>
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/map.hpp>
+#include <boost/hana/set.hpp>
 #include <boost/hana/sort.hpp>
 #include <boost/hana/zip_shortest.hpp>
 END_IGNORE_WARNINGS_FROM_DEPENDENCIES
@@ -37,6 +38,7 @@ namespace nocopy { namespace detail {
       }
     };
     static constexpr auto custom_fields() { return hana::filter(fields(), find_wrappers{}); }
+    static constexpr auto custom_fields_set() { return hana::to<hana::set_tag>(custom_fields()); }
     static constexpr auto has_custom_fields() { return hana::length(custom_fields()) > hana::size_c<0>; }
 
     struct alignment_is_larger {
@@ -105,6 +107,14 @@ namespace nocopy { namespace detail {
     static constexpr auto get_offset() {
       constexpr auto lookup = field_offset_lookup;
       return lookup[hana::type_c<T>];
+    }
+
+    template <typename ...Field>
+    static constexpr void assert_all_wrapped_fields_present() {
+      static_assert(
+        custom_fields_set() == hana::make_set(hana::type_c<Field>...)
+      , "all wrapped fields must be present"
+      );
     }
 
     template <typename Callback>
