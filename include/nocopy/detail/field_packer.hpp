@@ -37,6 +37,7 @@ namespace nocopy { namespace detail {
       }
     };
     static constexpr auto custom_fields() { return hana::filter(fields(), find_wrappers{}); }
+    static constexpr auto has_custom_fields() { return hana::length(custom_fields()) > hana::size_c<0>; }
 
     struct alignment_is_larger {
       template <typename X, typename Y>

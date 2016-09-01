@@ -6,7 +6,37 @@
 #include <nocopy/detail/field_packer.hpp>
 #include <nocopy/detail/traits.hpp>
 
+#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
+BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <span.h>
+END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+
 namespace nocopy {
+  namespace detail {
+    template <bool HasCustomFields>
+    struct range_helper {
+      template <typename StructPack>
+      static void construct(StructPack) {}
+      template <typename StructPack>
+      static void destruct(StructPack) {}
+    };
+    template <>
+    struct range_helper<true> {
+      template <typename StructPack>
+      static void construct(StructPack range) {
+        for (auto& s : range) {
+          StructPack::construct(s);
+        }
+      }
+      template <typename StructPack>
+      static void destruct(StructPack range) {
+        for (auto& s : range) {
+          StructPack::destruct(s);
+        }
+      }
+    };
+  }
+
   template <typename ...Fields>
   class structpack {
     using fieldpack = detail::field_packer<detail::field_traits<Fields>...>;
@@ -29,6 +59,14 @@ namespace nocopy {
         auto wrapped = self[f];
         decltype(wrapped)::destruct(wrapped);
       });
+    }
+
+    static void construct_range(gsl::span<structpack> range) {
+      detail::range_helper<fieldpack::has_custom_fields()>::construct(range);
+    }
+
+    static void destruct_range(gsl::span<structpack> range) {
+      detail::range_helper<fieldpack::has_custom_fields()>::destruct(range);
     }
 
     template <typename Field>
