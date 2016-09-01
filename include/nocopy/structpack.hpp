@@ -18,16 +18,16 @@ namespace nocopy {
     static constexpr bool has(Field) { return fieldpack::template has<detail::field_traits<Field>>(); }
 
     template <typename Field>
-    auto const& operator[](Field) const {
-      return reinterpret_cast<typename detail::field_traits<Field>::return_type const&>(
+    decltype(auto) operator[](Field) const {
+      return detail::field_traits<Field>::wrap(
         buffer[fieldpack::template get_offset<detail::field_traits<Field>>()]
       );
     }
 
     template <typename Field>
-    auto& operator[](Field f) {
-      return const_cast<typename detail::field_traits<Field>::return_type&>(
-        static_cast<structpack const&>(*this)[f]
+    decltype(auto) operator[](Field) {
+      return detail::field_traits<Field>::wrap(
+        mutable_buffer()[fieldpack::template get_offset<detail::field_traits<Field>>()]
       );
     }
 

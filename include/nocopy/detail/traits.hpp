@@ -148,15 +148,68 @@ namespace nocopy {
       static_assert(detail::is_valid_base_type<base>(), "Invalid type");
     }
 
+    template <typename Field, typename = void>
+    struct find_field_type { using type = typename Field::field_type; };
+    template <typename Field>
+    struct find_field_type<
+      Field, typename check_exists<typename Field::field_type::nocopy_type>::type
+    > {
+      using type = typename Field::field_type::nocopy_type;
+    };
+
+    template <typename> struct no_wrapper {};
+    template <typename Field, typename = void>
+    struct find_wrapper_type {
+      template <typename T>
+      using type = no_wrapper<T>;
+    };
+    template <typename Field>
+    struct find_wrapper_type<
+      Field, typename check_exists<typename Field::field_type::nocopy_type>::type
+    > {
+      template <typename T>
+      using type = typename Field::field_type::template wrapper_type<T>;
+    };
+
+    template <typename ReturnType, typename FieldType, template <typename> class WrapperType, typename = void>
+    struct wrapper {
+      auto operator()(unsigned char& buffer) const {
+        return WrapperType<ReturnType>{reinterpret_cast<ReturnType&>(buffer)};
+      }
+
+      auto operator()(unsigned char const& buffer) const {
+        return WrapperType<ReturnType const>{reinterpret_cast<ReturnType const&>(buffer)};
+      }
+    };
+    template <typename ReturnType, typename FieldType, template <typename> class WrapperType>
+    struct wrapper<
+      ReturnType, FieldType, WrapperType
+    , std::enable_if_t<std::is_same<no_wrapper<ReturnType>, WrapperType<ReturnType>>::value>
+    > {
+      ReturnType& operator()(unsigned char& buffer) const {
+        return reinterpret_cast<ReturnType&>(buffer);
+      }
+
+      ReturnType const& operator()(unsigned char const& buffer) const {
+        return reinterpret_cast<ReturnType const&>(buffer);
+      }
+    };
+
     template <typename Field>
     struct field_traits {
       using original_type = Field;
-      using field_type = typename Field::field_type;
+      using field_type = typename find_field_type<Field>::type;
+      template <typename T>
+      using wrapper_type = typename find_wrapper_type<Field>::template type<T>;
       using base_type = find_base_t<field_type>;
       static_assert(is_valid_base_type<base_type>(), "unsupported field type");
       using return_type = find_return_type_t<field_type>;
       static constexpr auto alignment = detail::find_alignment<base_type>::result;
       static constexpr auto size = sizeof(return_type);
+      template <typename T>
+      static constexpr decltype(auto) wrap(T& t) {
+        return wrapper<return_type, field_type, wrapper_type>{}(t);
+      }
     };
   }
 }
