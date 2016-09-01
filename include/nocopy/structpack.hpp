@@ -17,6 +17,20 @@ namespace nocopy {
     template <typename Field>
     static constexpr bool has(Field) { return fieldpack::template has<detail::field_traits<Field>>(); }
 
+    static void construct(structpack& self) {
+      fieldpack::each_wrapped([&](auto f) {
+        auto wrapped = self[f];
+        decltype(wrapped)::construct(wrapped);
+      });
+    }
+
+    static void destruct(structpack& self) {
+      fieldpack::each_wrapped([&](auto f) {
+        auto wrapped = self[f];
+        decltype(wrapped)::destruct(wrapped);
+      });
+    }
+
     template <typename Field>
     decltype(auto) operator[](Field) const {
       return detail::field_traits<Field>::wrap(

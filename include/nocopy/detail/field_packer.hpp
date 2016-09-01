@@ -7,6 +7,7 @@
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/at_key.hpp>
 #include <boost/hana/back.hpp>
+#include <boost/hana/for_each.hpp>
 #include <boost/hana/map.hpp>
 #include <boost/hana/sort.hpp>
 #include <boost/hana/zip_shortest.hpp>
@@ -19,6 +20,23 @@ namespace nocopy { namespace detail {
   struct field_packer {
   private:
     static constexpr auto fields() { return hana::make_tuple(hana::type_c<Fields>...); }
+
+    template <typename T>
+    struct check_exists { using type = void; };
+    template <typename Field, typename = void>
+    struct is_wrapper : std::false_type {};
+    template <typename Field>
+    struct is_wrapper<
+      Field, typename check_exists<typename Field::field_type::nocopy_type>::type
+    > : std::true_type {};
+
+    struct find_wrappers {
+      template <typename T>
+      constexpr auto operator()(T t) const {
+        return is_wrapper<typename decltype(t)::type>{};
+      }
+    };
+    static constexpr auto custom_fields() { return hana::filter(fields(), find_wrappers{}); }
 
     struct alignment_is_larger {
       template <typename X, typename Y>
@@ -86,6 +104,11 @@ namespace nocopy { namespace detail {
     static constexpr auto get_offset() {
       constexpr auto lookup = field_offset_lookup;
       return lookup[hana::type_c<T>];
+    }
+
+    template <typename Callback>
+    static void each_wrapped(Callback callback) {
+      hana::for_each(custom_fields(), [=](auto t) { callback(typename decltype(t)::type{}); });
     }
   };
 }}
