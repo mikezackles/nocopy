@@ -39,8 +39,12 @@ namespace nocopy { namespace detail {
     struct reference_impl<T, true> {
       using delegate_type = structpack<offset_field_t>;
       explicit operator Offset() const { return data[offset_field]; }
-      constexpr T const& deref(T const* t) const { return *t; }
-      constexpr T& deref(T* t) { return *t; }
+      constexpr T const& deref(unsigned char const& b) const {
+        return reinterpret_cast<T const&>(b);
+      }
+      constexpr T& deref(unsigned char& b) {
+        return reinterpret_cast<T&>(b);
+      }
 
       template <typename Field>
       auto const& operator[](Field f) const { return data[f]; }
@@ -55,13 +59,15 @@ namespace nocopy { namespace detail {
     struct reference_impl<T, false> {
       using delegate_type = structpack<offset_field_t, count_field_t>;
       explicit operator Offset() const { return data[offset_field]; }
-      auto deref(T const* t) const {
+      auto deref(unsigned char const& b) const {
+        auto& t = reinterpret_cast<T const&>(b);
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T const>{t, static_cast<index_type>(data[count_field])};
+        return gsl::span<T const>{&t, static_cast<index_type>(data[count_field])};
       }
-      auto deref(T* t) {
+      auto deref(unsigned char& b) {
+        auto& t = reinterpret_cast<T&>(b);
         using index_type = typename gsl::span<T const>::index_type;
-        return gsl::span<T>{t, static_cast<index_type>(data[count_field])};
+        return gsl::span<T>{&t, static_cast<index_type>(data[count_field])};
       }
 
       template <typename Field>
