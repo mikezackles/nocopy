@@ -45,15 +45,15 @@ namespace nocopy {
   // type. This changes with C++17.
   template <std::size_t Version, typename ...VersionRanges>
   struct schema {
-    using base_type = typename detail::versioned_structpack<Version, VersionRanges...>::type;
+    using delegate_type = typename detail::versioned_structpack<Version, VersionRanges...>::type;
 
-    static constexpr auto alignment() { return base_type::alignment(); }
+    static constexpr auto alignment() { return delegate_type::alignment(); }
 
     template <typename Field>
-    static constexpr bool has(Field f) { return base_type::has(f); }
+    static constexpr bool has(Field f) { return delegate_type::has(f); }
 
     template <template <std::size_t> class Field>
-    static constexpr bool has() { return base_type::has(Field<Version>{}); }
+    static constexpr bool has() { return delegate_type::has(Field<Version>{}); }
 
     constexpr std::size_t version() const { return Version; }
 
@@ -69,7 +69,7 @@ namespace nocopy {
     template <template <std::size_t> class Field>
     auto& get() { return data[Field<Version>{}]; }
 
-    base_type data;
+    delegate_type data;
   };
 }
 

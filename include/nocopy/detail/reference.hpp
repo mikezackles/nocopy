@@ -37,7 +37,7 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     struct reference_impl<T, true> {
-      using base_type = structpack<offset_field_t>;
+      using delegate_type = structpack<offset_field_t>;
       explicit operator Offset() const { return data[offset_field]; }
       constexpr T const& deref(T const* t) const { return *t; }
       constexpr T& deref(T* t) { return *t; }
@@ -48,12 +48,12 @@ namespace nocopy { namespace detail {
       template <typename Field>
       auto& operator[](Field f) { return data[f]; }
 
-      base_type data;
+      delegate_type data;
     };
 
     template <typename T>
     struct reference_impl<T, false> {
-      using base_type = structpack<offset_field_t, count_field_t>;
+      using delegate_type = structpack<offset_field_t, count_field_t>;
       explicit operator Offset() const { return data[offset_field]; }
       auto deref(T const* t) const {
         using index_type = typename gsl::span<T const>::index_type;
@@ -70,7 +70,7 @@ namespace nocopy { namespace detail {
       template <typename Field>
       auto& operator[](Field f) { return data[f]; }
 
-      base_type data;
+      delegate_type data;
     };
 
     // These types should not be instantiated manually! Use create_single and create_range instead.
