@@ -159,58 +159,19 @@ namespace nocopy {
     template <typename Field>
     using find_aggregate_t = typename find_aggregate<Field>::type;
 
-    template <typename> struct no_wrapper {};
-    template <typename Aggregate, typename = void>
-    struct find_wrapper_type {
-      template <typename T>
-      using type = no_wrapper<T>;
-    };
-    template <typename Aggregate>
-    struct find_wrapper_type<
-      Aggregate, typename check_exists<typename Aggregate::nocopy_type>::type
-    > {
-      template <typename T>
-      using type = typename Aggregate::template wrapper_type<T>;
-    };
-    template <typename Field, typename T>
-    using find_wrapper_type_t = typename find_wrapper_type<Field>::template type<T>;
-
-    template <typename ReturnType, typename FieldType, template <typename> class WrapperType, typename = void>
-    struct wrapper {
-      auto operator()(unsigned char& buffer) const {
-        return WrapperType<ReturnType>{reinterpret_cast<ReturnType&>(buffer)};
-      }
-
-      auto operator()(unsigned char const& buffer) const {
-        return WrapperType<ReturnType const>{reinterpret_cast<ReturnType const&>(buffer)};
-      }
-    };
-    template <typename ReturnType, typename FieldType, template <typename> class WrapperType>
-    struct wrapper<
-      ReturnType, FieldType, WrapperType
-    , std::enable_if_t<std::is_same<no_wrapper<ReturnType>, WrapperType<ReturnType>>::value>
-    > {
-      ReturnType& operator()(unsigned char& buffer) const {
-        return reinterpret_cast<ReturnType&>(buffer);
-      }
-
-      ReturnType const& operator()(unsigned char const& buffer) const {
-        return reinterpret_cast<ReturnType const&>(buffer);
-      }
-    };
-
     template <typename Aggregate>
     struct aggregate_traits {
-      template <typename T>
-      using wrapper_type = find_wrapper_type_t<Aggregate, T>;
       using base_type = find_base_t<Aggregate>;
       static_assert(is_valid_base_type<base_type>(), "unsupported field type");
       using return_type = find_return_type_t<Aggregate>;
       static constexpr auto alignment = detail::find_alignment<base_type>::result;
       static constexpr auto size = sizeof(return_type);
-      template <typename T>
-      static constexpr decltype(auto) wrap(T& t) {
-        return wrapper<return_type, Aggregate, wrapper_type>{}(t);
+
+      static return_type& wrap(unsigned char& buffer) {
+        return reinterpret_cast<return_type&>(buffer);
+      }
+      static return_type const& wrap(unsigned char const& buffer) {
+        return reinterpret_cast<return_type const&>(buffer);
       }
     };
 
