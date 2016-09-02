@@ -15,22 +15,8 @@ END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 namespace nocopy { namespace detail {
   template <typename Offset>
   class reference {
-    struct offset_field_t {
-      using field_type = Offset;
-      static constexpr auto name() { return "offset_field"; } \
-    private:
-      friend class reference;
-      constexpr offset_field_t() {}
-    };
-    static constexpr offset_field_t offset_field{};
-    struct count_field_t {
-      using field_type = Offset;
-      static constexpr auto name() { return "count_field"; } \
-    private:
-      friend class reference;
-      constexpr count_field_t() {}
-    };
-    static constexpr count_field_t count_field{};
+    NOCOPY_PRIVATE_FIELD(offset_field, Offset, reference);
+    NOCOPY_PRIVATE_FIELD(count_field, Offset, reference);
 
     template <typename T, bool is_single>
     struct reference_impl;

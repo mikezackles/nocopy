@@ -17,7 +17,7 @@
     static constexpr auto name() { return #field_name; } \
   private: \
     friend class containing_class; \
-    field_name ## _t() = default; \
+    constexpr field_name ## _t() {} \
   }; \
   static constexpr field_name ## _t field_name{}
 
