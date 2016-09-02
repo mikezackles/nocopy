@@ -25,19 +25,19 @@ namespace nocopy { namespace detail {
     template <typename T>
     struct check_exists { using type = void; };
     template <typename Field, typename = void>
-    struct is_wrapper : std::false_type {};
+    struct is_delegate : std::false_type {};
     template <typename Field>
-    struct is_wrapper<
-      Field, typename check_exists<typename Field::field_type::nocopy_type>::type
+    struct is_delegate<
+      Field, typename check_exists<typename Field::field_type::delegate_type>::type
     > : std::true_type {};
 
-    struct find_wrappers {
+    struct find_delegates {
       template <typename T>
       constexpr auto operator()(T t) const {
-        return is_wrapper<typename decltype(t)::type>{};
+        return is_delegate<typename decltype(t)::type>{};
       }
     };
-    static constexpr auto custom_fields() { return hana::filter(fields(), find_wrappers{}); }
+    static constexpr auto custom_fields() { return hana::filter(fields(), find_delegates{}); }
     static constexpr auto custom_fields_set() { return hana::to<hana::set_tag>(custom_fields()); }
     static constexpr auto has_custom_fields() { return hana::length(custom_fields()) > hana::size_c<0>; }
 
