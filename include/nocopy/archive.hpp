@@ -22,129 +22,123 @@ namespace nocopy {
   namespace detail {
     template <typename Offset, Offset Capacity>
     class archive {
-      NOCOPY_FIELD(buffer, NOCOPY_ARRAY(unsigned char, Capacity));
-      NOCOPY_FIELD(cursor, Offset);
+      NOCOPY_PRIVATE_FIELD(buffer, NOCOPY_ARRAY(unsigned char, Capacity), archive);
+      NOCOPY_PRIVATE_FIELD(cursor, Offset, archive);
+
+      using reference = detail::reference<Offset>;
+
+      template <typename T, bool is_single>
+      using generic_reference = typename reference::template generic<T, is_single>;
 
     public:
-      using nocopy_type = structpack<buffer_t, cursor_t>;
+      using delegate_type = structpack<buffer_t, cursor_t>;
 
-      template <typename Data>
-      class wrapper_type final {
-        using reference = detail::reference<Offset>;
+      template <typename T>
+      using single_reference = typename reference::template single<T>;
 
-        template <typename T, bool is_single>
-        using generic_reference = typename reference::template generic<T, is_single>;
+      template <typename T>
+      using range_reference = typename reference::template range<T>;
 
-      public:
-        template <typename T>
-        using single_reference = typename reference::template single<T>;
-
-        template <typename T>
-        using range_reference = typename reference::template range<T>;
-
-        wrapper_type(Data& data) noexcept : data_{data} {}
-
-        template <typename T, typename ...Callbacks>
-        auto alloc(Callbacks... callbacks) const {
-          auto callback = detail::make_overload(std::move(callbacks)...);
-          return alloc_helper<T>(
-            1
-          , [&](Offset offset, Offset) {
-              return callback(reference::template create_single<T>(offset));
-            }
-          , callback
-          );
-        }
-
-        template <typename T, typename ...Callbacks>
-        auto alloc_range(Offset count, Callbacks... callbacks) const {
-          auto callback = detail::make_overload(std::move(callbacks)...);
-          return alloc_helper<T>(
-            count
-          , [&](Offset offset, Offset count) {
-              return callback(reference::template create_range<T>(offset, count));
-            }
-          , callback
-          );
-        }
-
-        template <typename T, typename ...Callbacks>
-        auto add(T const& t, Callbacks... callbacks) const {
-          auto callback = detail::make_overload(std::move(callbacks)...);
-          return alloc<T>(
-            [=](auto& ref) {
-              this->deref(ref) = t;
-              return callback(ref);
-            }
-          , callback
-          );
-        }
-
-        template <typename T, typename ...Callbacks>
-        auto add(gsl::span<T> data, Callbacks... callbacks) const {
-          auto callback = detail::make_overload(std::move(callbacks)...);
-          return alloc_range<T>(
-            data.length()
-          , [=](auto& ref) {
-              std::copy(data.cbegin(), data.cend(), this->deref(ref).begin());
-              return callback(ref);
-            }
-          , callback
-          );
-        }
-
-        template <typename ...Callbacks>
-        auto add(char const* str, std::size_t len, Callbacks... callbacks) const {
-          using span = gsl::span<char const>;
-          static_assert(sizeof(Offset) <= sizeof(typename span::index_type)
-          , "offset type is too large");
-          assert(str != nullptr);
-          auto callback = detail::make_overload(std::move(callbacks)...);
-          // narrow_cast is necessary because gsl::span uses a signed index type
-          auto in = span{str, detail::narrow_cast<typename span::index_type>(len)};
-          return alloc_range<char const>(
-            len + 1
-          , [=](auto& ref) {
-              auto& data = this->deref(ref);
-              std::copy(in.cbegin(), in.cend(), data.begin());
-              data[len] = '\0';
-              return callback(ref);
-            }
-          , callback
-          );
-        }
-
-        template <typename ...Callbacks>
-        auto add(std::string const& str, Callbacks... callbacks) const {
-          return this->add(str.c_str(), str.length(), callbacks...);
-        }
-
-        template <typename T, bool Unused>
-        decltype(auto) deref(generic_reference<T, Unused> const& ref) const noexcept {
-          auto offset = static_cast<Offset>(ref);
-          return ref.deref(data_[buffer][offset]);
-        }
-
-        char const* get_string(range_reference<char const> const& ref) const noexcept {
-          return this->deref(ref).data();
-        }
-
-      private:
-        template <typename T, typename Success, typename Error>
-        auto alloc_helper(std::size_t count, Success&& success_callback, Error&& error_callback) noexcept {
-          detail::assert_valid_type<T>();
-          Offset addr = detail::align_to(data_[cursor], detail::alignment_for<T>());
-          auto size = sizeof(T) * count;
-          if (Capacity - addr < size) {
-            return error_callback(make_error_code(error::out_of_space));
-          } else {
-            data_[cursor] = addr + size;
-            return success_callback(addr, count);
+      template <typename T, typename ...Callbacks>
+      auto alloc(Callbacks... callbacks) const {
+        auto callback = detail::make_overload(std::move(callbacks)...);
+        return alloc_helper<T>(
+          1
+        , [&](Offset offset, Offset) {
+            return callback(reference::template create_single<T>(offset));
           }
-        }
+        , callback
+        );
+      }
 
-        Data& data_;
-      };
+      template <typename T, typename ...Callbacks>
+      auto alloc_range(Offset count, Callbacks... callbacks) const {
+        auto callback = detail::make_overload(std::move(callbacks)...);
+        return alloc_helper<T>(
+          count
+        , [&](Offset offset, Offset count) {
+            return callback(reference::template create_range<T>(offset, count));
+          }
+        , callback
+        );
+      }
+
+      template <typename T, typename ...Callbacks>
+      auto add(T const& t, Callbacks... callbacks) const {
+        auto callback = detail::make_overload(std::move(callbacks)...);
+        return alloc<T>(
+          [=](auto& ref) {
+            this->deref(ref) = t;
+            return callback(ref);
+          }
+        , callback
+        );
+      }
+
+      template <typename T, typename ...Callbacks>
+      auto add(gsl::span<T> data, Callbacks... callbacks) const {
+        auto callback = detail::make_overload(std::move(callbacks)...);
+        return alloc_range<T>(
+          data.length()
+        , [=](auto& ref) {
+            std::copy(data.cbegin(), data.cend(), this->deref(ref).begin());
+            return callback(ref);
+          }
+        , callback
+        );
+      }
+
+      template <typename ...Callbacks>
+      auto add(char const* str, std::size_t len, Callbacks... callbacks) const {
+        using span = gsl::span<char const>;
+        static_assert(sizeof(Offset) <= sizeof(typename span::index_type)
+        , "offset type is too large");
+        assert(str != nullptr);
+        auto callback = detail::make_overload(std::move(callbacks)...);
+        // narrow_cast is necessary because gsl::span uses a signed index type
+        auto in = span{str, detail::narrow_cast<typename span::index_type>(len)};
+        return alloc_range<char const>(
+          len + 1
+        , [=](auto& ref) {
+            auto& data = this->deref(ref);
+            std::copy(in.cbegin(), in.cend(), data.begin());
+            data[len] = '\0';
+            return callback(ref);
+          }
+        , callback
+        );
+      }
+
+      template <typename ...Callbacks>
+      auto add(std::string const& str, Callbacks... callbacks) const {
+        return this->add(str.c_str(), str.length(), callbacks...);
+      }
+
+      template <typename T, bool Unused>
+      decltype(auto) deref(generic_reference<T, Unused> const& ref) const noexcept {
+        auto offset = static_cast<Offset>(ref);
+        return ref.deref(data[buffer][offset]);
+      }
+
+      char const* get_string(range_reference<char const> const& ref) const noexcept {
+        return this->deref(ref).data();
+      }
+
+      delegate_type data;
+
+    private:
+      template <typename T, typename Success, typename Error>
+      auto alloc_helper(std::size_t count, Success&& success_callback, Error&& error_callback) noexcept {
+        detail::assert_valid_type<T>();
+        Offset addr = detail::align_to(data[cursor], detail::alignment_for<T>());
+        auto size = sizeof(T) * count;
+        if (Capacity - addr < size) {
+          return error_callback(make_error_code(error::out_of_space));
+        } else {
+          data[cursor] = addr + size;
+          return success_callback(addr, count);
+        }
+      }
     };
   }
 //#ifdef UINT32_MAX
