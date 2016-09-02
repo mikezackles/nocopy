@@ -23,6 +23,9 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     struct reference_impl<T, true> {
+      static void construct(reference_impl&) {}
+      static void destruct(reference_impl&) {}
+
       using delegate_type = structpack<offset_field_t>;
       explicit operator Offset() const { return data[offset_field]; }
       constexpr T const& deref(unsigned char const& b) const {
@@ -43,6 +46,9 @@ namespace nocopy { namespace detail {
 
     template <typename T>
     struct reference_impl<T, false> {
+      static void construct(reference_impl&) {}
+      static void destruct(reference_impl&) {}
+
       using delegate_type = structpack<offset_field_t, count_field_t>;
       explicit operator Offset() const { return data[offset_field]; }
       auto deref(unsigned char const& b) const {
