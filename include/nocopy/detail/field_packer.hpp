@@ -2,6 +2,7 @@
 #define UUID_68BDB6D9_BB11_4462_9187_4949324917AE
 
 #include <nocopy/detail/align_to.hpp>
+#include <nocopy/detail/delegate.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
@@ -21,15 +22,6 @@ namespace nocopy { namespace detail {
   struct field_packer {
   private:
     static constexpr auto fields() { return hana::make_tuple(hana::type_c<Fields>...); }
-
-    template <typename T>
-    struct check_exists { using type = void; };
-    template <typename Field, typename = void>
-    struct is_delegate : std::false_type {};
-    template <typename Field>
-    struct is_delegate<
-      Field, typename check_exists<typename Field::field_type::delegate_type>::type
-    > : std::true_type {};
 
     struct find_delegates {
       template <typename T>

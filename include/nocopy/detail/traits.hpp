@@ -1,6 +1,8 @@
 #ifndef UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 #define UUID_B2554911_1DFB_4DEE_B5A3_ECF03B2DDABC
 
+#include <nocopy/detail/delegate.hpp>
+
 #include <nocopy/fwd/box.hpp>
 #include <nocopy/fwd/structpack.hpp>
 #include <nocopy/fwd/field.hpp>
@@ -62,23 +64,8 @@ namespace nocopy {
     using find_return_type_t = typename find_return_type<FieldType>::type;
 
     template <typename T>
-    struct check_exists { using type = void; };
-    template <typename T, typename = void>
-    struct custom_delegate_type { using type = T; };
-    template <typename T>
-    struct custom_delegate_type<
-      T, typename check_exists<typename T::delegate_type>::type
-    > {
-      static_assert(
-        sizeof(T) == sizeof(typename T::delegate_type)
-      , "delegate type must not add member data"
-      );
-      using type = typename T::delegate_type;
-    };
-
-    template <typename T>
     struct find_base_type {
-      using type = typename custom_delegate_type<T>::type;
+      using type = typename find_delegate<T>::type;
     };
     template <typename FieldType, std::size_t Count>
     struct find_base_type<array<FieldType, Count>> {
