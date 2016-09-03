@@ -98,7 +98,7 @@ namespace nocopy { namespace detail {
 
     template <typename, typename, bool>
     friend class ::nocopy::detail::heap;
-    template <typename>
+    template <typename O, O>
     friend class ::nocopy::archive;
   };
 }}
