@@ -9,6 +9,7 @@
 #include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/errors.hpp>
+#include <nocopy/field.hpp>
 
 #include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
 BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
