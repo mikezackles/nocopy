@@ -66,8 +66,7 @@ namespace nocopy {
     , member_args<Field, std::tuple<Args...>> args
     , std::index_sequence<Indices...>
     ) {
-      auto wrapped = self[Field{}];
-      decltype(wrapped)::construct(allocator, wrapped, std::forward<Args>(std::get<Indices>(args))...);
+      Field::field_type::construct(allocator, self[Field{}], std::forward<Args>(std::get<Indices>(args))...);
     }
 
     template <typename Allocator, typename Field, typename ...Args>
@@ -95,8 +94,7 @@ namespace nocopy {
     template <typename Allocator>
     static void destruct(Allocator& allocator, structpack& self) {
       fieldpack::each_delegate([&](auto f) {
-        auto wrapped = self[f];
-        decltype(wrapped)::destruct(allocator, wrapped);
+        decltype(f)::field_type::destruct(allocator, self[f]);
       });
     }
 

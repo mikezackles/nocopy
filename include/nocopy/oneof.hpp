@@ -52,23 +52,23 @@ namespace nocopy {
     template <typename Allocator, typename Field>
     static std::enable_if_t<detail::is_delegate<Field>::value>
     destruct_helper(Allocator& allocator, Field, typename Field::delegate_type& d) {
-      Field::delegate_type::destruct(allocator, d);
+      Field::field_type::destruct(allocator, d);
     }
 
     template <typename Allocator, typename Field>
     static std::enable_if_t<!detail::is_delegate<Field>::value>
     destruct_helper(Allocator& allocator, Field, typename Field::delegate_type& d) {
-      Field::delegate_type::destruct(allocator, d);
+      Field::field_type::destruct(allocator, d);
     }
 
   public:
     static constexpr auto alignment() { return packed::alignment(); }
     static constexpr auto size() { return packed::size(); }
 
-    template <typename Allocator, typename T, typename ...Args>
-    static void construct(Allocator& allocator, oneof& self, T t, Args&&... args) {
-      static_assert(detail::is_delegate<T>::value, "oneof constructor is only for delegate types");
-      T::delegate_type::construct(allocator, self[t], std::forward<Args>(args)...);
+    template <typename Allocator, typename Field, typename ...Args>
+    static void construct(Allocator& allocator, oneof& self, Field f, Args&&... args) {
+      static_assert(detail::is_delegate<Field>::value, "oneof constructor is only for delegate types");
+      Field::field_type::construct(allocator, self[f], std::forward<Args>(args)...);
     }
 
     template <typename Allocator>
