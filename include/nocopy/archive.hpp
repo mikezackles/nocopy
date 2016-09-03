@@ -33,6 +33,8 @@ namespace nocopy {
     public:
       using delegate_type = structpack<buffer_t, cursor_t>;
 
+      archive(archive const&) = delete;
+
       template <typename T>
       using single_reference = typename reference::template single<T>;
 
