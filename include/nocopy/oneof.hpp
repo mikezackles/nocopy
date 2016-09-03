@@ -4,6 +4,7 @@
 #include <nocopy/fwd/box.hpp>
 #include <nocopy/fwd/oneof.hpp>
 
+#include <nocopy/detail/delegate.hpp>
 #include <nocopy/detail/traits.hpp>
 #include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>
@@ -47,9 +48,34 @@ namespace nocopy {
     static_assert(std::is_unsigned<Tag>::value, "tag type for oneof must be unsigned");
 
     using packed = detail::oneof_packer<Tag, detail::field_traits<Ts>...>;
+
+    template <typename Field>
+    static std::enable_if_t<detail::is_delegate<Field>::value>
+    destruct_helper(Field, typename Field::delegate_type& d) {
+      Field::delegate_type::destruct(d);
+    }
+
+    template <typename Field>
+    static std::enable_if_t<!detail::is_delegate<Field>::value>
+    destruct_helper(Field, typename Field::delegate_type& d) {
+      Field::delegate_type::destruct(d);
+    }
+
   public:
     static constexpr auto alignment() { return packed::alignment(); }
     static constexpr auto size() { return packed::size(); }
+
+    template <typename T, typename ...Args>
+    static void construct(oneof& self, T t, Args&&... args) {
+      static_assert(detail::is_delegate<T>::value, "oneof constructor is only for delegate types");
+      T::delegate_type::construct(self[t], std::forward<Args>(args)...);
+    }
+
+    static void destruct(oneof& self) {
+      self.visit([](auto f, auto& data) {
+        destruct_helper(f, data);
+      });
+    }
 
     // Note that if we've value or zero-initialized, we default to the first
     // type passed as a template argument
