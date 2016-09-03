@@ -102,15 +102,15 @@ namespace nocopy { namespace detail {
     }
 
     template <typename ...Field>
-    static constexpr void assert_all_wrapped_fields_present() {
+    static constexpr void assert_all_delegate_fields_present() {
       static_assert(
         custom_fields_set() == hana::make_set(hana::type_c<Field>...)
-      , "all wrapped fields must be present"
+      , "all delegate fields must be present"
       );
     }
 
     template <typename Callback>
-    static void each_wrapped(Callback callback) {
+    static void each_delegate(Callback callback) {
       hana::for_each(custom_fields(), [=](auto t) { callback(typename decltype(t)::type{}); });
     }
   };

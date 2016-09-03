@@ -87,14 +87,14 @@ namespace nocopy {
 
     template <typename Allocator, typename ...Field, typename ...Args>
     static void construct(Allocator& allocator, structpack& self, member_args<Field, Args>... inits) {
-      fieldpack::template assert_all_wrapped_fields_present<Field...>();
+      fieldpack::template assert_all_delegate_fields_present<Field...>();
       using expand_type = int[];
       expand_type{(construct_helper(allocator, self, inits), 0)...};
     }
 
     template <typename Allocator>
     static void destruct(Allocator& allocator, structpack& self) {
-      fieldpack::each_wrapped([&](auto f) {
+      fieldpack::each_delegate([&](auto f) {
         auto wrapped = self[f];
         decltype(wrapped)::destruct(allocator, wrapped);
       });
