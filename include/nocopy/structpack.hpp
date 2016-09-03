@@ -37,16 +37,18 @@ namespace nocopy {
     };
     template <>
     struct range_helper<true> {
-      template <typename StructPack, typename ...Field, typename ...Args>
-      static void construct(gsl::span<StructPack> range, member_args<Field, Args>... inits) {
+      template <typename Allocator, typename StructPack, typename ...Field, typename ...Args>
+      static void construct(
+        Allocator& allocator, gsl::span<StructPack> range, member_args<Field, Args>... inits
+      ) {
         for (auto& s : range) {
-          StructPack::construct(s, inits...);
+          StructPack::construct(allocator, s, inits...);
         }
       }
-      template <typename StructPack>
-      static void destruct(gsl::span<StructPack> range) {
+      template <typename Allocator, typename StructPack>
+      static void destruct(Allocator& allocator, gsl::span<StructPack> range) {
         for (auto& s : range) {
-          StructPack::destruct(s);
+          StructPack::destruct(allocator, s);
         }
       }
     };
@@ -57,22 +59,24 @@ namespace nocopy {
     using fieldpack = detail::field_packer<detail::field_traits<Fields>...>;
     using buffer_type = std::array<unsigned char, fieldpack::packed_size>;
 
-    template <typename Field, typename ...Args, std::size_t ...Indices>
+    template <typename Allocator, typename Field, typename ...Args, std::size_t ...Indices>
     static void construct_helper_indexed(
-      structpack& self
+      Allocator& allocator
+    , structpack& self
     , member_args<Field, std::tuple<Args...>> args
     , std::index_sequence<Indices...>
     ) {
       auto wrapped = self[Field{}];
-      decltype(wrapped)::construct(wrapped, std::forward<Args>(std::get<Indices>(args))...);
+      decltype(wrapped)::construct(allocator, wrapped, std::forward<Args>(std::get<Indices>(args))...);
     }
 
-    template <typename Field, typename ...Args>
+    template <typename Allocator, typename Field, typename ...Args>
     static void construct_helper(
-      structpack& self
+      Allocator& allocator
+    , structpack& self
     , member_args<Field, std::tuple<Args...>> args
     ) {
-      construct_helper_indexed(self, args, std::make_index_sequence<sizeof...(Args)>{});
+      construct_helper_indexed(allocator, self, args, std::make_index_sequence<sizeof...(Args)>{});
     }
 
   public:
@@ -81,27 +85,31 @@ namespace nocopy {
     template <typename Field>
     static constexpr bool has(Field) { return fieldpack::template has<detail::field_traits<Field>>(); }
 
-    template <typename ...Field, typename ...Args>
-    static void construct(structpack& self, member_args<Field, Args>... inits) {
+    template <typename Allocator, typename ...Field, typename ...Args>
+    static void construct(Allocator& allocator, structpack& self, member_args<Field, Args>... inits) {
       fieldpack::template assert_all_wrapped_fields_present<Field...>();
       using expand_type = int[];
-      expand_type{(construct_helper(self, inits), 0)...};
+      expand_type{(construct_helper(allocator, self, inits), 0)...};
     }
 
-    static void destruct(structpack& self) {
+    template <typename Allocator>
+    static void destruct(Allocator& allocator, structpack& self) {
       fieldpack::each_wrapped([&](auto f) {
         auto wrapped = self[f];
-        decltype(wrapped)::destruct(wrapped);
+        decltype(wrapped)::destruct(allocator, wrapped);
       });
     }
 
-    template <typename ...Field, typename ...Args>
-    static void construct_range(gsl::span<structpack> range, member_args<Field, Args>... inits) {
-      detail::range_helper<fieldpack::has_custom_fields()>::construct(range, inits...);
+    template <typename Allocator, typename ...Field, typename ...Args>
+    static void construct_range(
+      Allocator& allocator, gsl::span<structpack> range, member_args<Field, Args>... inits
+    ) {
+      detail::range_helper<fieldpack::has_custom_fields()>::construct(allocator, range, inits...);
     }
 
-    static void destruct_range(gsl::span<structpack> range) {
-      detail::range_helper<fieldpack::has_custom_fields()>::destruct(range);
+    template <typename Allocator>
+    static void destruct_range(Allocator& allocator, gsl::span<structpack> range) {
+      detail::range_helper<fieldpack::has_custom_fields()>::destruct(allocator, range);
     }
 
     template <typename Field>
