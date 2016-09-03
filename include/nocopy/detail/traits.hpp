@@ -4,9 +4,9 @@
 #include <nocopy/detail/delegate.hpp>
 
 #include <nocopy/fwd/box.hpp>
+#include <nocopy/fwd/oneof.hpp>
 #include <nocopy/fwd/structpack.hpp>
 #include <nocopy/fwd/field.hpp>
-#include <nocopy/fwd/oneof.hpp>
 
 #include <array>
 #include <climits>
@@ -16,22 +16,14 @@
 namespace nocopy {
   namespace detail {
     template <typename T>
-    struct is_structpack {
-      static constexpr bool value = false;
-    };
+    struct is_structpack : std::false_type {};
     template <typename ...Ts>
-    struct is_structpack<structpack<Ts...>> {
-      static constexpr bool value = true;
-    };
+    struct is_structpack<structpack<Ts...>> : std::true_type {};
 
     template <typename T>
-    struct is_oneof {
-      static constexpr bool value = false;
-    };
+    struct is_oneof : std::false_type {};
     template <typename ...Ts>
-    struct is_structpack<oneof<Ts...>> {
-      static constexpr bool value = true;
-    };
+    struct is_oneof<oneof<Ts...>> : std::true_type {};
 
     template <typename T, typename = void>
     struct boxer {
@@ -98,6 +90,7 @@ namespace nocopy {
     constexpr bool is_valid_base_type() {
       return
            is_structpack<BaseType>::value
+        || is_oneof<BaseType>::value
         || (std::is_same<BaseType, float>::value && std::numeric_limits<float>::is_iec559 && sizeof(float) * CHAR_BIT == 32)
         || (std::is_same<BaseType, double>::value && std::numeric_limits<double>::is_iec559 && sizeof(double) * CHAR_BIT == 64)
         || std::is_same<BaseType, char>::value
