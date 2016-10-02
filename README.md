@@ -3,7 +3,7 @@ Overview
 
 Nocopy is a header-only library that aims to provide a type-safe, compile-time,
 zero-copy solution to serialization. As of this writing, the
-[`include`](include/) directory contains less than 1700 lines of code.
+[`include`](include/) directory contains less than 2000 lines of code.
 
 ### Similar projects
 
@@ -392,12 +392,15 @@ risk, and please report bugs!
 For the Future
 -
 
-* Dump to JSON
+* Text dumps (probably JSON, for debugging)
 * Investigate supporting [Brigand](https://github.com/edouarda/brigand) as an
   alternative to Boost.Hana.
 * Framing
 * Consider a migration-like schema instead of version ranges
-* Consider simulated constructors/destructors for dynamic allocations
+* heap should support delegate constructors/destructors
+* archive should support delegate constructors/destructors
+* oneof should support delegate constructors/destructors
+* array should call delegate constructors/destructors
 
 License
 -
