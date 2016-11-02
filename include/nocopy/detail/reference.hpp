@@ -15,8 +15,8 @@ END_IGNORE_WARNINGS_FROM_DEPENDENCIES
 namespace nocopy { namespace detail {
   template <typename Offset>
   class reference {
-    NOCOPY_PRIVATE_FIELD(offset_field, Offset, reference);
-    NOCOPY_PRIVATE_FIELD(count_field, Offset, reference);
+    NOCOPY_FIELD(offset_field, Offset);
+    NOCOPY_FIELD(count_field, Offset);
 
     template <typename T, bool is_single>
     struct reference_impl;

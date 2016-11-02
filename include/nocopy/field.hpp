@@ -11,16 +11,6 @@
   }; \
   static constexpr field_name ## _t field_name{}
 
-#define NOCOPY_PRIVATE_FIELD(field_name, type, containing_class) \
-  struct field_name ## _t { \
-    using field_type = type; \
-    static constexpr auto name() { return #field_name; } \
-  private: \
-    friend class containing_class; \
-    constexpr field_name ## _t() {} \
-  }; \
-  static constexpr field_name ## _t field_name{}
-
 #define NOCOPY_VERSIONED_FIELD(field_name, type) \
   template <std::size_t Version> \
   struct field_name ## _t { \

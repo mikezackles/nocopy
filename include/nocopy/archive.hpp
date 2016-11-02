@@ -23,8 +23,8 @@ namespace nocopy {
   namespace detail {
     template <typename Offset, Offset Capacity>
     class archive {
-      NOCOPY_PRIVATE_FIELD(buffer, NOCOPY_ARRAY(unsigned char, Capacity), archive);
-      NOCOPY_PRIVATE_FIELD(cursor, Offset, archive);
+      NOCOPY_FIELD(buffer, NOCOPY_ARRAY(unsigned char, Capacity));
+      NOCOPY_FIELD(cursor, Offset);
 
       using reference = detail::reference<Offset>;
 
