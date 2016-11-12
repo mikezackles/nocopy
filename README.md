@@ -115,7 +115,7 @@ int main() {
   e::type exp{};
 
   exp[e::measure1][m::second] = 5;
-  exp[e::more_ms][4][m::second] = 12;
+  exp[e::more_measurements][4][m::second] = 12;
 
   std::cout
     << exp[e::measure1][m::second]
