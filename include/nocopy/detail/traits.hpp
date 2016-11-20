@@ -4,9 +4,9 @@
 #include <nocopy/detail/delegate.hpp>
 
 #include <nocopy/fwd/box.hpp>
+#include <nocopy/fwd/array.hpp>
 #include <nocopy/fwd/oneof.hpp>
 #include <nocopy/fwd/structpack.hpp>
-#include <nocopy/fwd/field.hpp>
 
 #include <array>
 #include <climits>
