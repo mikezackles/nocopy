@@ -128,22 +128,16 @@ namespace nocopy {
       static_assert(detail::is_valid_base_type<base>(), "Invalid type");
     }
 
-    template <typename Field, typename = void>
-    struct find_aggregate { using type = typename Field::field_type; };
     template <typename Field>
-    struct find_aggregate<
-      Field, typename check_exists<typename Field::aggregate_type::nocopy_type>::type
-    > {
-      using type = typename Field::aggregate_type::nocopy_type;
-    };
-    template <typename Field>
-    using find_aggregate_t = typename find_aggregate<Field>::type;
-
-    template <typename Aggregate>
-    struct aggregate_traits {
-      using base_type = find_base_t<Aggregate>;
+    struct field_traits {
+    private:
+      using stored_type = typename Field::field_type;
+      using base_type = find_base_t<stored_type>;
       static_assert(is_valid_base_type<base_type>(), "unsupported field type");
-      using return_type = find_return_type_t<Aggregate>;
+
+    public:
+      using original_type = Field;
+      using return_type = find_return_type_t<stored_type>;
       static constexpr auto alignment = detail::find_alignment<base_type>::result;
       static constexpr auto size = sizeof(return_type);
 
@@ -153,11 +147,6 @@ namespace nocopy {
       static return_type const& wrap(unsigned char const& buffer) {
         return reinterpret_cast<return_type const&>(buffer);
       }
-    };
-
-    template <typename Field>
-    struct field_traits : aggregate_traits<find_aggregate_t<Field>> {
-      using original_type = Field;
     };
   }
 }
