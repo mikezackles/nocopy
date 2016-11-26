@@ -4,9 +4,9 @@
 #include <nocopy/fwd/box.hpp>
 #include <nocopy/fwd/oneof.hpp>
 
+#include <lambda_overload/lambda_overload.hpp>
 #include <nocopy/detail/delegate.hpp>
 #include <nocopy/detail/traits.hpp>
-#include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>
 #include <nocopy/detail/oneof_packer.hpp>
 
@@ -84,7 +84,7 @@ namespace nocopy {
     auto visit(Lambdas... lambdas) const {
       return detail::dispatcher<packed::num_types() - 1, packed>::dispatch(
         get_tag()
-      , [this, callback = detail::make_overload(std::move(lambdas)...)] (auto t) {
+      , [this, callback = lambda_overload::make_overload(std::move(lambdas)...)] (auto t) {
           return callback(typename decltype(t)::original_type{}, this->get_payload<decltype(t)>());
         }
       );

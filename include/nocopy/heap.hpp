@@ -3,8 +3,8 @@
 
 #include <nocopy/fwd/heap.hpp>
 
+#include <lambda_overload/lambda_overload.hpp>
 #include <nocopy/detail/align_to.hpp>
-#include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>
 #include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
@@ -86,7 +86,7 @@ namespace nocopy {
       template <typename T, typename ...Callbacks>
       auto malloc(Callbacks... callbacks) {
         detail::assert_valid_type<T>();
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         return malloc_helper(
           sizeof(T)
         , [&callback](Offset offset) {
@@ -99,7 +99,7 @@ namespace nocopy {
       template <typename T, typename ...Callbacks>
       auto malloc_range(Offset count, Callbacks... callbacks) {
         detail::assert_valid_type<T>();
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         return malloc_helper(
           sizeof(T) * count
         , [&callback, count](Offset offset) {
@@ -148,7 +148,7 @@ namespace nocopy {
     private:
       template <typename ...Callbacks>
       auto malloc_helper(std::size_t requested_size, Callbacks... callbacks) {
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         Offset target_size = detail::narrow_cast<Offset>(
           byte_multiplier * detail::align_to(requested_size, alignment)
         );
@@ -394,7 +394,7 @@ namespace nocopy {
       static auto create_helper(
         bool do_init, unsigned char* buffer, std::size_t size, Callbacks... callbacks
       ) noexcept {
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         auto aligned_size = detail::narrow_cast<Offset>(
           detail::align_backward(size / byte_multiplier, alignment)
         );

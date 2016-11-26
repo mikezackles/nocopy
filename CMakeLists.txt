@@ -15,6 +15,8 @@ set(GSL_LOCATION "${CMAKE_SOURCE_DIR}/bundle/gsl" CACHE PATH
   "the location of the GSL library")
 set(SILENCE_DEPENDENCIES_LOCATION "${CMAKE_SOURCE_DIR}/bundle/silence_dependencies" CACHE PATH
   "the location of the silence_dependencies helper")
+set(LAMBDA_OVERLOAD_LOCATION "${CMAKE_SOURCE_DIR}/bundle/lambda_overload" CACHE PATH
+  "the location of the lambda_overload helper")
 set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
 
 set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
@@ -28,7 +30,8 @@ target_include_directories(nocopy
   "include"
   "${HANA_LOCATION}/include"
   "${GSL_LOCATION}/include"
-  "${SILENCE_DEPENDENCIES_LOCATION}/include")
+  "${SILENCE_DEPENDENCIES_LOCATION}/include"
+  "${LAMBDA_OVERLOAD_LOCATION}/include")
 # TODO - whitelist features here if necessary
 target_use_modern_cxx(nocopy TYPE INTERFACE)
 

@@ -3,8 +3,8 @@
 
 #include <nocopy/fwd/archive.hpp>
 
+#include <lambda_overload/lambda_overload.hpp>
 #include <nocopy/detail/align_to.hpp>
-#include <nocopy/detail/lambda_overload.hpp>
 #include <nocopy/detail/narrow_cast.hpp>
 #include <nocopy/detail/reference.hpp>
 #include <nocopy/detail/traits.hpp>
@@ -44,7 +44,7 @@ namespace nocopy {
 
       template <typename T, typename ...Callbacks>
       auto alloc(Callbacks... callbacks) const {
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         return alloc_helper<T>(
           1
         , [&](Offset offset, Offset) {
@@ -56,7 +56,7 @@ namespace nocopy {
 
       template <typename T, typename ...Callbacks>
       auto alloc_range(Offset count, Callbacks... callbacks) const {
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         return alloc_helper<T>(
           count
         , [&](Offset offset, Offset count) {
@@ -68,7 +68,7 @@ namespace nocopy {
 
       template <typename T, typename ...Callbacks>
       auto add(T const& t, Callbacks... callbacks) const {
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         return alloc<T>(
           [=](auto& ref) {
             this->deref(ref) = t;
@@ -80,7 +80,7 @@ namespace nocopy {
 
       template <typename T, typename ...Callbacks>
       auto add(gsl::span<T> data, Callbacks... callbacks) const {
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         return alloc_range<T>(
           data.length()
         , [=](auto& ref) {
@@ -97,7 +97,7 @@ namespace nocopy {
         static_assert(sizeof(Offset) <= sizeof(typename span::index_type)
         , "offset type is too large");
         assert(str != nullptr);
-        auto callback = detail::make_overload(std::move(callbacks)...);
+        auto callback = lambda_overload::make_overload(std::move(callbacks)...);
         // narrow_cast is necessary because gsl::span uses a signed index type
         auto in = span{str, detail::narrow_cast<typename span::index_type>(len)};
         return alloc_range<char const>(
