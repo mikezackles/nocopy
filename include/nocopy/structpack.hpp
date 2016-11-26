@@ -6,10 +6,10 @@
 #include <nocopy/detail/field_packer.hpp>
 #include <nocopy/detail/traits.hpp>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <silence_dependencies/ignore_warnings.hpp>
+SD_BEGIN_IGNORE_WARNINGS
 #include <span.h>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+SD_END_IGNORE_WARNINGS
 
 #include <tuple>
 #include <utility>

@@ -3,13 +3,13 @@
 
 #include <nocopy/detail/align_to.hpp>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <silence_dependencies/ignore_warnings.hpp>
+SD_BEGIN_IGNORE_WARNINGS
 #include <boost/hana/at.hpp>
 #include <boost/hana/maximum.hpp>
 #include <boost/hana/size.hpp>
 #include <boost/hana/tuple.hpp>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+SD_END_IGNORE_WARNINGS
 
 namespace nocopy { namespace detail {
   template <typename Tag, typename ...Ts>

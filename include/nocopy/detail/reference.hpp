@@ -7,10 +7,10 @@
 #include <nocopy/structpack.hpp>
 #include <nocopy/field.hpp>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <silence_dependencies/ignore_warnings.hpp>
+SD_BEGIN_IGNORE_WARNINGS
 #include <span.h>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+SD_END_IGNORE_WARNINGS
 
 namespace nocopy { namespace detail {
   template <typename Offset>

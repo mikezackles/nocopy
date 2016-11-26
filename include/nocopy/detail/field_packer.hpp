@@ -4,8 +4,8 @@
 #include <nocopy/detail/align_to.hpp>
 #include <nocopy/detail/delegate.hpp>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <silence_dependencies/ignore_warnings.hpp>
+SD_BEGIN_IGNORE_WARNINGS
 #include <boost/hana/at_key.hpp>
 #include <boost/hana/back.hpp>
 #include <boost/hana/for_each.hpp>
@@ -13,7 +13,7 @@ BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
 #include <boost/hana/set.hpp>
 #include <boost/hana/sort.hpp>
 #include <boost/hana/zip_shortest.hpp>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+SD_END_IGNORE_WARNINGS
 
 namespace nocopy { namespace detail {
   namespace hana = boost::hana;

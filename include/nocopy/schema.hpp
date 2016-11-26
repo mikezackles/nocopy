@@ -3,11 +3,11 @@
 
 #include <nocopy/fwd/structpack.hpp>
 
-#include <nocopy/detail/ignore_warnings_from_dependencies.hpp>
-BEGIN_IGNORE_WARNINGS_FROM_DEPENDENCIES
+#include <silence_dependencies/ignore_warnings.hpp>
+SD_BEGIN_IGNORE_WARNINGS
 #include <boost/hana/filter.hpp>
 #include <boost/hana/tuple.hpp>
-END_IGNORE_WARNINGS_FROM_DEPENDENCIES
+SD_END_IGNORE_WARNINGS
 
 namespace nocopy {
   namespace detail {
