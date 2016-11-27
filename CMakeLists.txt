@@ -35,7 +35,7 @@ target_include_directories(nocopy
 # TODO - whitelist features here if necessary
 target_use_modern_cxx(nocopy TYPE INTERFACE)
 
-add_executable(tests
+add_executable(tests EXCLUDE_FROM_ALL
   "test/main.cpp"
   "test/schema.cpp"
   "test/structpack.cpp"
@@ -61,4 +61,8 @@ target_add_sanitizers(tests)
 target_link_libraries(tests PRIVATE nocopy)
 
 enable_testing()
-add_test(tests tests)
+add_test(tests tests --force-colour)
+
+set(CMAKE_CTEST_COMMAND ctest -V)
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
+add_dependencies(check tests)
