@@ -17,7 +17,8 @@ set(SILENCE_DEPENDENCIES_LOCATION "${CMAKE_SOURCE_DIR}/bundle/silence_dependenci
   "the location of the silence_dependencies helper")
 set(LAMBDA_OVERLOAD_LOCATION "${CMAKE_SOURCE_DIR}/bundle/lambda_overload" CACHE PATH
   "the location of the lambda_overload helper")
-set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
+set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL
+  "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
 
 set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
 

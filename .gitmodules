@@ -10,3 +10,9 @@
 [submodule "bundle/gsl"]
 	path = bundle/gsl
 	url = git://github.com/Microsoft/GSL
+[submodule "bundle/lambda_overload"]
+	path = bundle/lambda_overload
+	url = git@github.com:mikezackles/lambda_overload
+[submodule "bundle/silence_dependencies"]
+	path = bundle/silence_dependencies
+	url = git@github.com:mikezackles/silence_dependencies
