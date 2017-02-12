@@ -1,26 +1,34 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-include("target_add_sanitizers")
-include("target_all_warnings_except")
-include("target_use_modern_cxx")
-include("default_build_type")
+  set(DEPENDENCY_CMAKE_TOOLS_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bundle/cmake_tools" CACHE PATH
+    "the location of the cmake_tools helper repository")
+  list(APPEND CMAKE_MODULE_PATH "${DEPENDENCY_CMAKE_TOOLS_LOCATION}")
 
-default_build_type(Release)
-project(nocopy VERSION 0.1 LANGUAGES CXX)
+  set(DEPENDENCY_HANA_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bundle/hana" CACHE PATH
+    "the location of the hana library")
+  set(DEPENDENCY_GSL_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bundle/gsl" CACHE PATH
+    "the location of the GSL library")
+  set(DEPENDENCY_SILENCE_DEPENDENCIES_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bundle/silence_dependencies" CACHE PATH
+    "the location of the silence_dependencies helper")
+  set(DEPENDENCY_LAMBDA_OVERLOAD_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bundle/lambda_overload" CACHE PATH
+    "the location of the lambda_overload helper")
+  set(DEPENDENCY_CATCH_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/bundle/catch" CACHE PATH
+    "the location of the catch testing library")
 
-set(HANA_LOCATION "${CMAKE_SOURCE_DIR}/bundle/hana" CACHE PATH
-  "the location of the hana library")
-set(GSL_LOCATION "${CMAKE_SOURCE_DIR}/bundle/gsl" CACHE PATH
-  "the location of the GSL library")
-set(SILENCE_DEPENDENCIES_LOCATION "${CMAKE_SOURCE_DIR}/bundle/silence_dependencies" CACHE PATH
-  "the location of the silence_dependencies helper")
-set(LAMBDA_OVERLOAD_LOCATION "${CMAKE_SOURCE_DIR}/bundle/lambda_overload" CACHE PATH
-  "the location of the lambda_overload helper")
-set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL
-  "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
+  set(OPTIMIZE_LITTLE_ENDIAN false CACHE BOOL
+    "optimize for little-endian architectures (NOT FOR USE ON BIG-ENDIAN PLATFORMS)")
 
-set(CMAKE_CXX_EXTENSIONS OFF) # Turn off gnu extensions
+  include("default_build_type")
+  default_build_type(Release)
+  project(nocopy VERSION 0.1 LANGUAGES CXX)
+
+  enable_testing()
+  set(CMAKE_CTEST_COMMAND ctest -V)
+  add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
+
+  add_subdirectory("${DEPENDENCY_LAMBDA_OVERLOAD_LOCATION}" EXCLUDE_FROM_ALL)
+endif()
 
 add_library(nocopy INTERFACE)
 target_compile_definitions(nocopy
@@ -29,25 +37,26 @@ target_compile_definitions(nocopy
 target_include_directories(nocopy
   INTERFACE
   "include"
-  "${HANA_LOCATION}/include"
-  "${GSL_LOCATION}/include"
-  "${SILENCE_DEPENDENCIES_LOCATION}/include"
-  "${LAMBDA_OVERLOAD_LOCATION}/include")
+  "${DEPENDENCY_HANA_LOCATION}/include"
+  "${DEPENDENCY_GSL_LOCATION}/include"
+  "${DEPENDENCY_SILENCE_DEPENDENCIES_LOCATION}/include")
+target_link_libraries(nocopy INTERFACE lambda_overload)
 # TODO - whitelist features here if necessary
+include("target_use_modern_cxx")
 target_use_modern_cxx(nocopy TYPE INTERFACE)
 
-add_executable(tests EXCLUDE_FROM_ALL
+add_executable(nocopy_tests EXCLUDE_FROM_ALL
   "test/main.cpp"
   "test/schema.cpp"
   "test/structpack.cpp"
   "test/oneof.cpp"
   "test/heap.cpp")
 
-target_include_directories(tests
-  PRIVATE
-  "${CMAKE_SOURCE_DIR}/bundle/catch/include")
+target_include_directories(nocopy_tests
+  PRIVATE "${DEPENDENCY_CATCH_LOCATION}/include")
 
-target_all_warnings_except(tests
+include("target_all_warnings_except")
+target_all_warnings_except(nocopy_tests
   CLANG
   -Wno-c++98-compat
   -Wno-c++98-compat-pedantic
@@ -57,13 +66,14 @@ target_all_warnings_except(tests
   -Wno-unknown-pragmas # catch
   )
 
-target_add_sanitizers(tests)
+include("target_add_sanitizers")
+target_add_sanitizers(nocopy_tests)
 
-target_link_libraries(tests PRIVATE nocopy)
+target_link_libraries(nocopy_tests PRIVATE nocopy)
 
 enable_testing()
-add_test(tests tests --force-colour)
+add_test(NAME nocopy_tests COMMAND nocopy_tests)
 
-set(CMAKE_CTEST_COMMAND ctest -V)
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
-add_dependencies(check tests)
+if(TARGET check)
+  add_dependencies(check nocopy_tests)
+endif()
